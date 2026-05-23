@@ -1,0 +1,556 @@
+{% extends 'chw/dashboard/base.html' %} {% load static %} {% block title %}Register Patient | J.J. Dossen{% endblock %} {% block page_title %}Register New Patient{% endblock %} {% block extra_css %}
+<style>
+    .form-container {
+        max-width: 100%;
+        margin: 0;
+    }
+    
+    .form-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+    
+    .form-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-card);
+    }
+    
+    .form-header h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+    }
+    
+    .form-header p {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 5px;
+        margin-bottom: 0;
+    }
+    
+    .form-body {
+        padding: 1.5rem;
+    }
+    
+    .form-section {
+        background: var(--bg-main);
+        border-radius: 16px;
+        padding: 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+    
+    .form-section h4 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-group label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+    }
+    
+    .required-field::after {
+        content: "*";
+        color: var(--danger);
+        margin-left: 3px;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-family: 'Inter', sans-serif;
+        background: var(--bg-card);
+        transition: all 0.2s;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.1);
+    }
+    /* Error Styling */
+    
+    .form-group.has-error input,
+    .form-group.has-error select,
+    .form-group.has-error textarea {
+        border-color: var(--danger);
+        background-color: #FFF5F5;
+    }
+    
+    .form-group.has-error input:focus,
+    .form-group.has-error select:focus,
+    .form-group.has-error textarea:focus {
+        border-color: var(--danger);
+        box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.1);
+    }
+    
+    .error-message {
+        color: var(--danger);
+        font-size: 0.7rem;
+        margin-top: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .error-message i {
+        font-size: 0.65rem;
+    }
+    /* Non-field errors (form-wide errors) */
+    
+    .form-errors {
+        background: #FEE2E2;
+        border: 1px solid var(--danger);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-errors ul {
+        margin: 0;
+        padding-left: 1.5rem;
+        color: var(--danger);
+        font-size: 0.85rem;
+    }
+    
+    .form-hint {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+    }
+    
+    .age-display {
+        background: var(--bg-card);
+        padding: 0.6rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-size: 0.85rem;
+        color: var(--text-primary);
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        justify-content: flex-end;
+    }
+    
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+        padding: 0.6rem 1.8rem;
+        border-radius: 10px;
+        border: none;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background: var(--hover-bg);
+        color: var(--text-secondary);
+        padding: 0.6rem 1.8rem;
+        border-radius: 10px;
+        text-decoration: none;
+        border: 1px solid var(--border);
+        transition: all 0.2s;
+    }
+    
+    .btn-secondary:hover {
+        background: var(--border);
+        color: var(--text-primary);
+    }
+    
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+        .form-actions {
+            flex-direction: column;
+        }
+        .btn-primary,
+        .btn-secondary {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %} {% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h3><i class="fas fa-user-plus"></i> Register New Patient</h3>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 5px;">Fill in all required fields to register a patient at J.J. Dossen Hospital</p>
+        </div>
+        <div class="form-body">
+            <!-- Display non-field errors (form-wide errors) -->
+            {% if form.non_field_errors %}
+            <div class="form-errors">
+                <ul>
+                    {% for error in form.non_field_errors %}
+                    <li><i class="fas fa-exclamation-circle"></i> {{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <form method="post" id="patientForm" novalidate>
+                {% csrf_token %}
+
+                <!-- 1. Personal Information -->
+                <div class="form-section">
+                    <h4><i class="fas fa-user-circle"></i> 1. Personal Information</h4>
+                    <div class="form-row">
+                        <div class="form-group {% if form.first_name.errors %}has-error{% endif %}">
+                            <label class="required-field">First Name</label> {{ form.first_name }} {% if form.first_name.errors %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i> {{ form.first_name.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group {% if form.last_name.errors %}has-error{% endif %}">
+                            <label class="required-field">Last Name</label> {{ form.last_name }} {% if form.last_name.errors %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i> {{ form.last_name.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group {% if form.gender.errors %}has-error{% endif %}">
+                            <label class="required-field">Gender</label> {{ form.gender }} {% if form.gender.errors %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i> {{ form.gender.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group {% if form.date_of_birth.errors %}has-error{% endif %}">
+                            <label class="required-field">Date of Birth</label> {{ form.date_of_birth }} {% if form.date_of_birth.errors %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i> {{ form.date_of_birth.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label>Age</label>
+                            <div class="age-display" id="ageDisplay">-</div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group {% if form.phone_number.errors %}has-error{% endif %}">
+                            <label class="required-field">Phone Number</label> {{ form.phone_number }}
+                            <div class="form-hint">Format: +XXX XXXXXXXXX</div>
+                            {% if form.phone_number.errors %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i> {{ form.phone_number.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group {% if form.email.errors %}has-error{% endif %}">
+                            <label>Email (Optional)</label> {{ form.email }}
+                            <div class="form-hint">Used for communication and appointment reminders</div>
+                            {% if form.email.errors %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i> {{ form.email.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group {% if form.national_id.errors %}has-error{% endif %}">
+                            <label>National ID (Optional)</label> {{ form.national_id }} {% if form.national_id.errors %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i> {{ form.national_id.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group {% if form.marital_status.errors %}has-error{% endif %}">
+                            <label class="required-field">Marital Status</label> {{ form.marital_status }} {% if form.marital_status.errors %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i> {{ form.marital_status.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Address Information -->
+                <div class="form-section">
+                    <h4><i class="fas fa-map-marker-alt"></i> 2. Address Information</h4>
+                    <div class="form-row">
+                        <div class="form-group {% if form.village.errors %}has-error{% endif %}">
+                            <label class="required-field">Village</label> {{ form.village }} {% if form.village.errors %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i> {{ form.village.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group {% if form.cell.errors %}has-error{% endif %}">
+                            <label class="required-field">Cell</label> {{ form.cell }} {% if form.cell.errors %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i> {{ form.cell.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group {% if form.sector.errors %}has-error{% endif %}">
+                            <label class="required-field">Sector</label> {{ form.sector }} {% if form.sector.errors %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i> {{ form.sector.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group {% if form.district.errors %}has-error{% endif %}">
+                            <label class="required-field">District</label> {{ form.district }} {% if form.district.errors %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i> {{ form.district.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-group {% if form.landmark.errors %}has-error{% endif %}">
+                        <label>Landmark (Optional)</label> {{ form.landmark }}
+                        <div class="form-hint">e.g., Near the church, Next to school</div>
+                        {% if form.landmark.errors %}
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-circle"></i> {{ form.landmark.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- 3. Emergency Contact -->
+                <div class="form-section">
+                    <h4><i class="fas fa-phone-alt"></i> 3. Emergency Contact</h4>
+                    <div class="form-row">
+                        <div class="form-group {% if form.emergency_name.errors %}has-error{% endif %}">
+                            <label class="required-field">Full Name</label> {{ form.emergency_name }} {% if form.emergency_name.errors %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i> {{ form.emergency_name.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group {% if form.emergency_relationship.errors %}has-error{% endif %}">
+                            <label class="required-field">Relationship</label> {{ form.emergency_relationship }} {% if form.emergency_relationship.errors %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i> {{ form.emergency_relationship.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-group {% if form.emergency_phone.errors %}has-error{% endif %}">
+                        <label class="required-field">Phone Number</label> {{ form.emergency_phone }}
+                        <div class="form-hint">Format: +XXX XXXXXXXXX</div>
+                        {% if form.emergency_phone.errors %}
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-circle"></i> {{ form.emergency_phone.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- 4. Basic Health Information -->
+                <div class="form-section">
+                    <h4><i class="fas fa-heartbeat"></i> 4. Basic Health Information</h4>
+                    <div class="form-row">
+                        <div class="form-group {% if form.weight_kg.errors %}has-error{% endif %}">
+                            <label>Weight (kg)</label> {{ form.weight_kg }} {% if form.weight_kg.errors %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i> {{ form.weight_kg.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group {% if form.height_cm.errors %}has-error{% endif %}">
+                            <label>Height (cm)</label> {{ form.height_cm }} {% if form.height_cm.errors %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i> {{ form.height_cm.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group {% if form.blood_pressure_systolic.errors %}has-error{% endif %}">
+                            <label>Blood Pressure</label>
+                            <div class="form-row" style="gap: 0.5rem;">
+                                {{ form.blood_pressure_systolic }}
+                                <span style="align-self: center;">/</span> {{ form.blood_pressure_diastolic }}
+                            </div>
+                            {% if form.blood_pressure_systolic.errors %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i> {{ form.blood_pressure_systolic.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group {% if form.temperature_c.errors %}has-error{% endif %}">
+                            <label>Temperature (°C)</label> {{ form.temperature_c }} {% if form.temperature_c.errors %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i> {{ form.temperature_c.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group {% if form.pulse_rate.errors %}has-error{% endif %}">
+                            <label>Pulse Rate (bpm)</label> {{ form.pulse_rate }} {% if form.pulse_rate.errors %}
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-circle"></i> {{ form.pulse_rate.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Medical History -->
+                <div class="form-section">
+                    <h4><i class="fas fa-notes-medical"></i> 5. Medical History</h4>
+                    <div class="form-group {% if form.known_conditions.errors %}has-error{% endif %}">
+                        <label>Known Conditions</label> {{ form.known_conditions }}
+                        <div class="form-hint">e.g., Diabetes, Hypertension, Asthma, Heart Disease</div>
+                        {% if form.known_conditions.errors %}
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-circle"></i> {{ form.known_conditions.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group {% if form.current_medications.errors %}has-error{% endif %}">
+                        <label>Current Medications</label> {{ form.current_medications }} {% if form.current_medications.errors %}
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-circle"></i> {{ form.current_medications.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group {% if form.allergies.errors %}has-error{% endif %}">
+                        <label>Allergies</label> {{ form.allergies }} {% if form.allergies.errors %}
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-circle"></i> {{ form.allergies.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group {% if form.past_surgeries.errors %}has-error{% endif %}">
+                        <label>Past Surgeries (Optional)</label> {{ form.past_surgeries }} {% if form.past_surgeries.errors %}
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-circle"></i> {{ form.past_surgeries.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- 6. Special Conditions -->
+                <div class="form-section" id="pregnancySection" style="display: none;">
+                    <h4><i class="fas fa-baby-carriage"></i> 6. Special Conditions</h4>
+                    <div class="form-group {% if form.is_pregnant.errors %}has-error{% endif %}">
+                        <label>Are you pregnant? (For females only)</label> {{ form.is_pregnant }}
+                        <div class="form-hint">This field only applies to female patients</div>
+                        {% if form.is_pregnant.errors %}
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-circle"></i> {{ form.is_pregnant.errors.0 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i> Register Patient
+                    </button>
+                    <a href="{% url 'patients:all_patients' %}" class="btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-calculate age from date of birth
+    const dobInput = document.getElementById('{{ form.date_of_birth.id_for_label }}');
+    const ageDisplay = document.getElementById('ageDisplay');
+    const genderSelect = document.getElementById('genderSelect');
+    const pregnancySection = document.getElementById('pregnancySection');
+    const pregnancySelect = document.getElementById('{{ form.is_pregnant.id_for_label }}');
+
+    function calculateAge() {
+        const dob = new Date(dobInput.value);
+        const today = new Date();
+
+        if (dob && !isNaN(dob)) {
+            let age = today.getFullYear() - dob.getFullYear();
+            const monthDiff = today.getMonth() - dob.getMonth();
+
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+
+            ageDisplay.textContent = age + ' years';
+        } else {
+            ageDisplay.textContent = '-';
+        }
+    }
+
+    // Show/hide pregnancy section based on gender
+    function togglePregnancySection() {
+        if (genderSelect && genderSelect.value === 'F') {
+            pregnancySection.style.display = 'block';
+            if (pregnancySelect) {
+                pregnancySelect.required = false;
+            }
+        } else {
+            pregnancySection.style.display = 'none';
+            if (pregnancySelect) {
+                pregnancySelect.value = 'na';
+            }
+        }
+    }
+
+    dobInput.addEventListener('change', calculateAge);
+
+    if (genderSelect) {
+        genderSelect.addEventListener('change', togglePregnancySection);
+        togglePregnancySection();
+    }
+</script>
+{% endblock %}

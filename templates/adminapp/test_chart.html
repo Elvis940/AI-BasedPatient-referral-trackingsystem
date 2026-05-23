@@ -1,0 +1,23 @@
+{% extends 'adminapp/dashboard/base.html' %} {% block content %}
+<div style="padding: 2rem;">
+    <h2>Chart.js Test</h2>
+    <canvas id="testChart" width="400" height="200"></canvas>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    const ctx = document.getElementById('testChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+            datasets: [{
+                label: 'Test Data',
+                data: [5, 10, 7, 12, 8],
+                borderColor: '#2563EB',
+                backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                fill: true
+            }]
+        }
+    });
+</script>
+{% endblock %}

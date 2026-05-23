@@ -1,0 +1,505 @@
+{% extends 'doctor/dashboard/base.html' %} {% load static %} {% block title %}Write Prescription | J.J. Dossen{% endblock %} {% block page_title %}Write Prescription{% endblock %} {% block extra_css %}
+<style>
+    .prescription-wrapper {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .form-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+        width: 100%;
+    }
+    
+    .form-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-main);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .form-header h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+    }
+    
+    .btn-download {
+        background: #3B82F6;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+    }
+    
+    .btn-download:hover {
+        background: #2563EB;
+        transform: translateY(-1px);
+    }
+    
+    .btn-print {
+        background: #10B981;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+        margin-left: 0.5rem;
+    }
+    
+    .btn-print:hover {
+        background: #059669;
+        transform: translateY(-1px);
+    }
+    
+    .form-body {
+        padding: 1.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-group label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-family: 'Inter', sans-serif;
+        background: var(--bg-card);
+        transition: all 0.2s;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .checkbox-group input {
+        width: auto;
+    }
+    
+    .checkbox-group label {
+        margin-bottom: 0;
+    }
+    
+    .btn-submit {
+        background: var(--primary);
+        color: white;
+        padding: 0.7rem 1.5rem;
+        border-radius: 10px;
+        border: none;
+        font-weight: 500;
+        font-size: 0.9rem;
+        cursor: pointer;
+        width: 100%;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-submit:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+    }
+    
+    .patient-select {
+        margin-bottom: 1rem;
+    }
+    
+    .form-hint {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+    }
+    /* Prescription PDF Styles */
+    
+    .prescription-pdf {
+        display: none;
+        padding: 2rem;
+        background: white;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        .prescription-pdf,
+        .prescription-pdf * {
+            visibility: visible;
+        }
+        .prescription-pdf {
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            padding: 20px;
+            background: white;
+        }
+        .no-print {
+            display: none !important;
+        }
+        .sidebar,
+        .top-header,
+        .form-card,
+        .btn-submit,
+        .btn-download,
+        .btn-print {
+            display: none !important;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .form-body {
+            padding: 1rem;
+        }
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+        .form-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+{% endblock %} {% block content %}
+<div class="prescription-wrapper">
+    <div class="form-card">
+        <div class="form-header">
+            <h3><i class="fas fa-prescription-bottle"></i> Write New Prescription</h3>
+            <div class="no-print">
+                <button type="button" class="btn-download" id="downloadBtn" style="display: none;">
+                    <i class="fas fa-download"></i> Download PDF
+                </button>
+                <button type="button" class="btn-print" id="printBtn" style="display: none;">
+                    <i class="fas fa-print"></i> Print
+                </button>
+            </div>
+        </div>
+        <div class="form-body">
+            <form method="post" id="prescriptionForm">
+                {% csrf_token %} {% if not patient %}
+                <div class="patient-select">
+                    <div class="form-group">
+                        <label>Select Patient</label>
+                        <select name="patient_id" id="patientSelect" required>
+                            <option value="">-- Select Patient --</option>
+                            {% for p in recent_patients %}
+                            <option value="{{ p.id }}">{{ p.full_name }} ({{ p.patient_id }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                {% else %}
+                <input type="hidden" name="patient_id" value="{{ patient.id }}">
+                <div class="form-group">
+                    <label>Patient</label>
+                    <input type="text" id="patientName" value="{{ patient.full_name }} ({{ patient.patient_id }})" disabled style="background: var(--bg-main);">
+                </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label>Diagnosis *</label>
+                    <textarea name="diagnosis" id="diagnosis" rows="3" placeholder="Enter diagnosis..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Medications *</label>
+                    <textarea name="medications" id="medications" rows="4" placeholder="Enter medications with dosage and frequency...
+Example:
+- Amoxicillin 500mg, twice daily for 7 days
+- Paracetamol 500mg, as needed for fever" required></textarea>
+                    <div class="form-hint">Include medication name, dosage, frequency, and duration</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Instructions</label>
+                    <textarea name="instructions" id="instructions" rows="2" placeholder="Additional instructions for the patient..."></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Duration (days)</label>
+                        <input type="number" name="duration_days" id="durationDays" value="7" min="1" max="90">
+                    </div>
+                    <div class="form-group">
+                        <label>Follow-up Required</label>
+                        <div class="checkbox-group">
+                            <input type="checkbox" name="follow_up_required" id="followUpRequired">
+                            <label>Yes, schedule follow-up</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Blood Pressure</label>
+                        <input type="text" name="blood_pressure" id="bloodPressure" placeholder="e.g., 120/80">
+                    </div>
+                    <div class="form-group">
+                        <label>Temperature (°C)</label>
+                        <input type="number" name="temperature" id="temperature" step="0.1" placeholder="36.5">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Pulse Rate (bpm)</label>
+                        <input type="number" name="pulse_rate" id="pulseRate" placeholder="72">
+                    </div>
+                    <div class="form-group">
+                        <label>Weight (kg)</label>
+                        <input type="number" name="weight" id="weight" step="0.1" placeholder="65.5">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-save"></i> Save Prescription
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Prescription PDF Template -->
+<div class="prescription-pdf" id="prescriptionPdf">
+    <div style="max-width: 800px; margin: 0 auto; font-family: 'Inter', sans-serif;">
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #10B981; padding-bottom: 20px;">
+            <h1 style="color: #10B981; margin-bottom: 5px; font-size: 24px;">J.J. Dossen Memorial Hospital</h1>
+            <p style="color: #6B7280; margin: 0;">Patient Prescription</p>
+            <p style="color: #6B7280; margin: 5px 0 0 0; font-size: 12px;">Your Health, Our Priority</p>
+        </div>
+
+        <!-- Patient Info -->
+        <div style="margin-bottom: 25px; padding: 15px; background: #F3F4F6; border-radius: 10px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div><strong>Patient Name:</strong> <span id="pdfPatientName"></span></div>
+                <div><strong>Date:</strong> <span id="pdfDate"></span></div>
+                <div><strong>Patient ID:</strong> <span id="pdfPatientId"></span></div>
+                <div><strong>Doctor:</strong> Dr. <span id="pdfDoctorName"></span></div>
+            </div>
+        </div>
+
+        <!-- Diagnosis -->
+        <div style="margin-bottom: 20px;">
+            <h3 style="color: #10B981; margin-bottom: 10px; font-size: 1rem;">Diagnosis</h3>
+            <div style="padding: 10px; background: #F9FAFB; border-radius: 8px; border-left: 3px solid #10B981;">
+                <p id="pdfDiagnosis" style="margin: 0;"></p>
+            </div>
+        </div>
+
+        <!-- Medications -->
+        <div style="margin-bottom: 20px;">
+            <h3 style="color: #10B981; margin-bottom: 10px; font-size: 1rem;">Medications</h3>
+            <div style="padding: 10px; background: #F9FAFB; border-radius: 8px;">
+                <pre id="pdfMedications" style="white-space: pre-wrap; font-family: inherit; margin: 0;"></pre>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div style="margin-bottom: 20px;">
+            <h3 style="color: #10B981; margin-bottom: 10px; font-size: 1rem;">Instructions</h3>
+            <div style="padding: 10px; background: #F9FAFB; border-radius: 8px;">
+                <p id="pdfInstructions" style="margin: 0;"></p>
+            </div>
+        </div>
+
+        <!-- Vitals -->
+        <div style="margin-bottom: 20px; padding: 15px; background: #F3F4F6; border-radius: 10px;">
+            <h3 style="color: #10B981; margin-bottom: 10px; font-size: 1rem;">Vital Signs</h3>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                <div><strong>Blood Pressure:</strong> <span id="pdfBloodPressure"></span></div>
+                <div><strong>Temperature:</strong> <span id="pdfTemperature"></span> °C</div>
+                <div><strong>Pulse Rate:</strong> <span id="pdfPulseRate"></span> bpm</div>
+                <div><strong>Weight:</strong> <span id="pdfWeight"></span> kg</div>
+                <div><strong>Duration:</strong> <span id="pdfDuration"></span> days</div>
+                <div><strong>Follow-up:</strong> <span id="pdfFollowUp"></span></div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="margin-top: 30px; text-align: center; border-top: 1px solid #E5E7EB; padding-top: 20px;">
+            <div style="margin-top: 10px;">
+                <p style="margin: 0;">Doctor's Signature: ___________________</p>
+                <p style="margin: 5px 0 0 0; font-size: 0.7rem; color: #6B7280;">This is a computer-generated prescription. No signature required.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Get prescription data from Django template variables
+    { %
+        if prescription %
+    }
+    // Store prescription data
+    const prescriptionData = {
+        patientName: '{{ prescription.patient.full_name|escapejs }}',
+        patientId: '{{ prescription.patient.patient_id|escapejs }}',
+        doctorName: '{{ prescription.doctor.get_full_name|escapejs }}',
+        diagnosis: '{{ prescription.diagnosis|escapejs }}',
+        medications: '{{ prescription.medications|escapejs }}',
+        instructions: '{{ prescription.instructions|escapejs|default:"No additional instructions" }}',
+        bloodPressure: '{{ prescription.blood_pressure|default:"Not recorded" }}',
+        temperature: '{{ prescription.temperature|default:"—" }}',
+        pulseRate: '{{ prescription.pulse_rate|default:"—" }}',
+        weight: '{{ prescription.weight|default:"—" }}',
+        duration: '{{ prescription.duration_days }}',
+        followUp: '{{ prescription.follow_up_required|yesno:"Yes,No" }}'
+    };
+
+    // Show download and print buttons
+    document.getElementById('downloadBtn').style.display = 'inline-flex';
+    document.getElementById('printBtn').style.display = 'inline-flex';
+
+    // Function to fill PDF template
+    function fillPrescriptionPDF() {
+        document.getElementById('pdfPatientName').textContent = prescriptionData.patientName;
+        document.getElementById('pdfPatientId').textContent = prescriptionData.patientId;
+        document.getElementById('pdfDoctorName').textContent = prescriptionData.doctorName;
+        document.getElementById('pdfDiagnosis').textContent = prescriptionData.diagnosis;
+        document.getElementById('pdfMedications').textContent = prescriptionData.medications;
+        document.getElementById('pdfInstructions').textContent = prescriptionData.instructions;
+        document.getElementById('pdfBloodPressure').textContent = prescriptionData.bloodPressure;
+        document.getElementById('pdfTemperature').textContent = prescriptionData.temperature;
+        document.getElementById('pdfPulseRate').textContent = prescriptionData.pulseRate;
+        document.getElementById('pdfWeight').textContent = prescriptionData.weight;
+        document.getElementById('pdfDuration').textContent = prescriptionData.duration;
+        document.getElementById('pdfFollowUp').textContent = prescriptionData.followUp;
+
+        const today = new Date();
+        document.getElementById('pdfDate').textContent = today.toLocaleDateString();
+    }
+
+    // Download as PDF
+    document.getElementById('downloadBtn').addEventListener('click', function() {
+        fillPrescriptionPDF();
+
+        // Get the PDF content
+        const pdfContent = document.getElementById('prescriptionPdf').innerHTML;
+        const originalTitle = document.title;
+        document.title = `Prescription_${prescriptionData.patientName}_${new Date().toLocaleDateString()}`;
+
+        // Create a new window for printing
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Prescription - ${prescriptionData.patientName}</title>
+                    <style>
+                        body {
+                            font-family: 'Inter', Arial, sans-serif;
+                            margin: 0;
+                            padding: 20px;
+                        }
+                        @media print {
+                            body {
+                                padding: 0;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${pdfContent}
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                            setTimeout(function() {
+                                window.close();
+                            }, 500);
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `);
+        printWindow.document.close();
+
+        document.title = originalTitle;
+    });
+
+    // Print directly
+    document.getElementById('printBtn').addEventListener('click', function() {
+        fillPrescriptionPDF();
+        window.print();
+    }); { % endif %
+    }
+</script>
+
+<style media="print">
+    .no-print {
+        display: none !important;
+    }
+    
+    .sidebar,
+    .top-header,
+    .form-card,
+    .btn-submit,
+    .btn-download,
+    .btn-print {
+        display: none !important;
+    }
+    
+    .prescription-pdf {
+        display: block !important;
+    }
+    
+    body {
+        background: white;
+        margin: 0;
+        padding: 0;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends 'doctor/dashboard/base.html' %} {% load static %} {% block title %}My Schedule | J.J. Dossen{% endblock %} {% block page_title %}My Schedule{% endblock %} {% block extra_css %}
+<style>
+    .schedule-list {
+        background: var(--bg-card);
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+    
+    .schedule-item {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .schedule-item:last-child {
+        border-bottom: none;
+    }
+    
+    .schedule-item:hover {
+        background: var(--hover-bg);
+        cursor: pointer;
+    }
+    
+    .schedule-date {
+        background: var(--primary-light);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 12px;
+        text-align: center;
+        min-width: 80px;
+    }
+    
+    .schedule-date .day {
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+    
+    .schedule-date .month {
+        font-size: 0.7rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-muted);
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %} {% block content %}
+<div class="schedule-list">
+    {% if upcoming %} {% for referral in upcoming %}
+    <div class="schedule-item" onclick="window.location.href='{% url 'referrals:referral_detail' referral.id %}'">
+        <div class="schedule-date">
+            <div class="day">{{ referral.scheduled_date|date:"d" }}</div>
+            <div class="month">{{ referral.scheduled_date|date:"M" }}</div>
+        </div>
+        <div>
+            <strong>{{ referral.patient.full_name }}</strong><br>
+            <small>{{ referral.patient.patient_id }} | {{ referral.patient.age }} years</small>
+        </div>
+        <div>
+            <i class="fas fa-clock"></i> {{ referral.scheduled_date|date:"h:i A" }}
+        </div>
+        <div>
+            <span style="background: 
+                    {% if referral.status == 'pending' %}#FEF3C7; color:#D97706
+                    {% elif referral.status == 'accepted' %}#DBEAFE; color:#2563EB
+                    {% else %}#D1FAE5; color:#059669{% endif %}; 
+                    padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem;">
+                    {{ referral.get_status_display }}
+                </span>
+        </div>
+    </div>
+    {% endfor %} {% else %}
+    <div class="empty-state">
+        <i class="fas fa-calendar-week"></i>
+        <p>No upcoming appointments scheduled</p>
+        <p style="font-size: 0.8rem;">Check pending referrals to schedule appointments</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

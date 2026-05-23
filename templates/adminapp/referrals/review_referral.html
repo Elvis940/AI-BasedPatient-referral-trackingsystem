@@ -1,0 +1,293 @@
+{% extends 'adminapp/dashboard/base.html' %} {% load static %} {% block title %}Review Referral | Admin Dashboard{% endblock %} {% block page_title %}Review Referral: {{ referral.referral_code }}{% endblock %} {% block extra_css %}
+<style>
+    .detail-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        border: 1px solid var(--border);
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .info-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+    }
+    
+    .info-value {
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .status-pending_admin {
+        background: #FEF3C7;
+        color: #D97706;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 1.5rem;
+    }
+    
+    .btn-approve {
+        background: var(--success);
+        color: white;
+        padding: 0.6rem 1.5rem;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-reject {
+        background: var(--danger);
+        color: white;
+        padding: 0.6rem 1.5rem;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-secondary {
+        background: var(--hover-bg);
+        color: var(--text-secondary);
+        padding: 0.6rem 1.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        border: 1px solid var(--border);
+    }
+    
+    .rejection-form {
+        background: #FEE2E2;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-top: 1rem;
+        display: none;
+    }
+    
+    .rejection-form textarea {
+        width: 100%;
+        padding: 0.5rem;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        margin-top: 0.5rem;
+    }
+    
+    .doctor-select {
+        width: 100%;
+        padding: 0.6rem;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        margin-top: 0.5rem;
+        font-size: 0.85rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-group label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+        color: var(--text-primary);
+    }
+    
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %} {% block content %}
+<!-- Main Details -->
+<div class="detail-card">
+    <div class="info-grid">
+        <div class="info-item">
+            <span class="info-label">Referral Code</span>
+            <span class="info-value">{{ referral.referral_code }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Status</span>
+            <span class="info-value">
+                <span class="status-badge status-{{ referral.status }}">
+                    {{ referral.get_status_display }}
+                </span>
+            </span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Patient Name</span>
+            <span class="info-value">{{ referral.patient.full_name }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Patient ID</span>
+            <span class="info-value">{{ referral.patient.patient_id }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Age / Gender</span>
+            <span class="info-value">{{ referral.patient.age }} / {{ referral.patient.get_gender_display }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Village</span>
+            <span class="info-value">{{ referral.patient.village }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Phone</span>
+            <span class="info-value">{{ referral.patient.phone_number }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">CHW</span>
+            <span class="info-value">{{ referral.chw.get_full_name|default:referral.chw.username }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Urgency</span>
+            <span class="info-value">{{ referral.get_urgency_display }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Specialist</span>
+            <span class="info-value">{{ referral.get_specialist_display }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Created Date</span>
+            <span class="info-value">{{ referral.created_at|date:"M d, Y h:i A" }}</span>
+        </div>
+    </div>
+
+    {% if referral.notes %}
+    <div style="margin-top: 1rem;">
+        <span class="info-label">CHW Notes</span>
+        <p>{{ referral.notes }}</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- AI Assessment Details -->
+{% if referral.assessment %}
+<div class="detail-card">
+    <h4><i class="fas fa-robot"></i> AI Assessment Results</h4>
+    <div class="info-grid">
+        <div class="info-item">
+            <span class="info-label">Primary Complaint</span>
+            <span class="info-value">{{ referral.assessment.primary_complaint }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Severity Score</span>
+            <span class="info-value">{{ referral.assessment.severity_score }}/10</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">AI Confidence</span>
+            <span class="info-value">{{ referral.assessment.ai_confidence }}%</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">AI Urgency</span>
+            <span class="info-value">{{ referral.assessment.get_ai_urgency_display }}</span>
+        </div>
+    </div>
+    {% if referral.assessment.ai_reasoning %}
+    <div style="margin-top: 0.5rem;">
+        <span class="info-label">AI Reasoning</span>
+        <p>{{ referral.assessment.ai_reasoning }}</p>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Admin Actions -->
+<div class="detail-card">
+    <h4><i class="fas fa-gavel"></i> Admin Actions</h4>
+
+    <!-- Approve Form -->
+    <form method="post" action="{% url 'adminapp:admin_approve_referral' referral.id %}" id="approveForm">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label>Assign Doctor (Optional - Leave blank to assign later)</label>
+            <select name="doctor_id" class="doctor-select" id="doctorSelect">
+                <option value="">-- Select a doctor to assign (or leave unassigned) --</option>
+                {% for doctor in all_doctors %}
+                <option value="{{ doctor.id }}" 
+                        data-specialization="{{ doctor.profile.full_specialization }}"
+                        {% if referral.doctor_id == doctor.id %}selected{% endif %}>
+                    Dr. {{ doctor.get_full_name }} - {{ doctor.profile.full_specialization }} 
+                    ({% if doctor.profile.availability_status == 'available' %}Available{% else %}{{ doctor.profile.get_availability_status_display }}{% endif %})
+                </option>
+                {% endfor %}
+            </select>
+            <div class="form-hint" style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.25rem;">
+                <i class="fas fa-info-circle"></i> You can assign any doctor regardless of specialization. If left blank, you can assign later.
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button type="submit" class="btn-approve" onclick="return confirm('Approve this referral?')">
+                <i class="fas fa-check"></i> Approve Referral
+            </button>
+            <button type="button" class="btn-reject" id="showRejectForm">
+                <i class="fas fa-times"></i> Reject Referral
+            </button>
+            <a href="{% url 'adminapp:admin_all_referrals' %}" class="btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </form>
+
+    <!-- Reject Form (Hidden Initially) -->
+    <div id="rejectFormContainer" class="rejection-form">
+        <form method="post" action="{% url 'adminapp:admin_reject_referral' referral.id %}">
+            {% csrf_token %}
+            <label><strong>Reason for Rejection:</strong></label>
+            <textarea name="rejection_reason" rows="3" placeholder="Please provide detailed reason for rejecting this referral..."></textarea>
+            <div class="action-buttons" style="margin-top: 1rem;">
+                <button type="submit" class="btn-reject" onclick="return confirm('Reject this referral?')">
+                    <i class="fas fa-times"></i> Confirm Rejection
+                </button>
+                <button type="button" class="btn-secondary" id="cancelReject">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const showRejectBtn = document.getElementById('showRejectForm');
+    const rejectForm = document.getElementById('rejectFormContainer');
+    const cancelReject = document.getElementById('cancelReject');
+
+    if (showRejectBtn) {
+        showRejectBtn.addEventListener('click', function() {
+            rejectForm.style.display = 'block';
+            this.style.display = 'none';
+        });
+    }
+
+    if (cancelReject) {
+        cancelReject.addEventListener('click', function() {
+            rejectForm.style.display = 'none';
+            if (showRejectBtn) showRejectBtn.style.display = 'block';
+        });
+    }
+</script>
+{% endblock %}

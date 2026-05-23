@@ -1,0 +1,631 @@
+{% extends 'adminapp/dashboard/base.html' %}
+{% load static %}
+
+{% block title %}User Management | J.J. Dossen{% endblock %}
+{% block page_title %}User Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 1rem;
+        border: 1px solid var(--border);
+        transition: all 0.2s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+    
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+    
+    .stat-icon.primary { background: rgba(10, 92, 142, 0.1); color: var(--primary); }
+    .stat-icon.success { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+    .stat-icon.warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+    
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-label {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    /* Filter Bar */
+    .filter-bar {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border);
+    }
+    
+    .filter-form {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+    
+    .filter-group {
+        flex: 1;
+        min-width: 140px;
+    }
+    
+    .filter-group label {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        color: var(--text-secondary);
+    }
+    
+    .filter-group input,
+    .filter-group select {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .filter-group input:focus,
+    .filter-group select:focus {
+        outline: none;
+        border-color: var(--primary);
+    }
+    
+    .filter-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .btn-filter {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-filter-primary {
+        background: var(--primary);
+        color: white;
+    }
+    
+    .btn-filter-primary:hover {
+        background: var(--primary-dark);
+    }
+    
+    .btn-filter-secondary {
+        background: var(--hover-bg);
+        color: var(--text-secondary);
+    }
+    
+    .btn-filter-secondary:hover {
+        background: var(--border);
+    }
+    
+    .btn-filter-success {
+        background: var(--success);
+        color: white;
+    }
+    
+    /* Users Table */
+    .users-table-container {
+        background: var(--bg-card);
+        border-radius: 12px;
+        overflow-x: auto;
+        border: 1px solid var(--border);
+    }
+    
+    .users-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 800px;
+    }
+    
+    .users-table th {
+        padding: 0.75rem 1rem;
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        background: var(--bg-main);
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .users-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.8rem;
+    }
+    
+    .users-table tr:hover {
+        background: var(--bg-main);
+    }
+    
+    /* User Avatar */
+    .user-avatar-small {
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .user-details h4 {
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 2px;
+    }
+    
+    .user-details p {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+    }
+    
+    /* Badges */
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 8px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+    
+    .badge-doctor { background: rgba(16, 185, 129, 0.1); color: #10B981; }
+    .badge-chw { background: rgba(245, 158, 11, 0.1); color: #F59E0B; }
+    .badge-active { background: rgba(16, 185, 129, 0.1); color: #10B981; }
+    .badge-pending { background: rgba(245, 158, 11, 0.1); color: #F59E0B; }
+    .badge-inactive { background: rgba(239, 68, 68, 0.1); color: #EF4444; }
+    
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 6px;
+    }
+    
+    .action-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        text-decoration: none;
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        cursor: pointer;
+    }
+    
+    .action-btn:hover { transform: translateY(-2px); }
+    .action-btn.view:hover { background: var(--primary); border-color: var(--primary); color: white; }
+    .action-btn.edit:hover { background: var(--warning); border-color: var(--warning); color: white; }
+    .action-btn.toggle:hover { background: var(--success); border-color: var(--success); color: white; }
+    .action-btn.delete:hover { background: var(--danger); border-color: var(--danger); color: white; }
+    
+    /* Pagination */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    .pagination a,
+    .pagination span {
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.8rem;
+    }
+    
+    .pagination a {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+    }
+    
+    .pagination a:hover {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: white;
+    }
+    
+    .pagination .current {
+        background: var(--primary);
+        color: white;
+    }
+    
+    /* Custom Modal for Confirmations */
+    .custom-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .custom-modal.active {
+        display: flex;
+    }
+    
+    .modal-content {
+        background: var(--bg-card);
+        border-radius: 20px;
+        max-width: 400px;
+        width: 90%;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .modal-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+    }
+    
+    .modal-icon.warning {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+    }
+    
+    .modal-icon.danger {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+    
+    .modal-icon i {
+        font-size: 2rem;
+    }
+    
+    .modal-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .modal-message {
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .modal-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+    
+    .modal-btn {
+        padding: 0.5rem 1.5rem;
+        border-radius: 8px;
+        border: none;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .modal-btn-confirm {
+        background: var(--danger);
+        color: white;
+    }
+    
+    .modal-btn-confirm:hover {
+        background: #DC2626;
+    }
+    
+    .modal-btn-cancel {
+        background: var(--hover-bg);
+        color: var(--text-secondary);
+    }
+    
+    .modal-btn-cancel:hover {
+        background: var(--border);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon primary"><i class="fas fa-users"></i></div>
+        </div>
+        <div class="stat-value">{{ total_users }}</div>
+        <div class="stat-label">Total Users</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon success"><i class="fas fa-user-md"></i></div>
+        </div>
+        <div class="stat-value">{{ total_doctors }}</div>
+        <div class="stat-label">Doctors</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon warning"><i class="fas fa-hands-helping"></i></div>
+        </div>
+        <div class="stat-value">{{ total_chws }}</div>
+        <div class="stat-label">CHWs</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon success"><i class="fas fa-check-circle"></i></div>
+        </div>
+        <div class="stat-value">{{ active_users }}</div>
+        <div class="stat-label">Active</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon warning"><i class="fas fa-clock"></i></div>
+        </div>
+        <div class="stat-value">{{ pending_users }}</div>
+        <div class="stat-label">Pending</div>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="filter-bar">
+    <form method="get" class="filter-form">
+        <div class="filter-group">
+            <label>Search</label>
+            <input type="text" name="search" placeholder="Name, ID, email..." value="{{ search }}">
+        </div>
+        <div class="filter-group">
+            <label>User Type</label>
+            <select name="user_type">
+                <option value="">All</option>
+                <option value="doctor" {% if user_type_filter == 'doctor' %}selected{% endif %}>Doctor</option>
+                <option value="chw" {% if user_type_filter == 'chw' %}selected{% endif %}>CHW</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Status</label>
+            <select name="status">
+                <option value="">All</option>
+                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn-filter btn-filter-primary"><i class="fas fa-search"></i> Filter</button>
+            <a href="{% url 'user_management:all_users' %}" class="btn-filter btn-filter-secondary"><i class="fas fa-redo"></i> Reset</a>
+            <a href="{% url 'user_management:add_user' %}" class="btn-filter btn-filter-success"><i class="fas fa-plus"></i> Add</a>
+        </div>
+    </form>
+</div>
+
+<!-- Users Table -->
+<div class="users-table-container">
+    <table class="users-table">
+        <thead>
+            <tr><th>User</th><th>ID / Type</th><th>Contact</th><th>Status</th><th>Joined</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+            {% for user in page_obj %}
+            <tr id="user-row-{{ user.id }}">
+                <td>
+                    <div class="user-info">
+                        <div class="user-avatar-small">{{ user.first_name|first|default:user.username|first|upper }}</div>
+                        <div class="user-details">
+                            <h4>{{ user.get_full_name|default:user.username }}</h4>
+                            <p>@{{ user.username }}</p>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    {% if user.profile.doctor_id %}<div class="badge badge-doctor"><i class="fas fa-id-card"></i> {{ user.profile.doctor_id }}</div>{% endif %}
+                    {% if user.profile.chw_id %}<div class="badge badge-chw"><i class="fas fa-id-card"></i> {{ user.profile.chw_id }}</div>{% endif %}
+                    <div class="badge {% if user.profile.user_type == 'doctor' %}badge-doctor{% else %}badge-chw{% endif %}">
+                        <i class="fas {% if user.profile.user_type == 'doctor' %}fa-user-md{% else %}fa-hands-helping{% endif %}"></i> {{ user.profile.get_user_type_display }}
+                    </div>
+                </td>
+                <td><div><i class="fas fa-envelope"></i> {{ user.email|default:"-" }}</div><div><i class="fas fa-phone"></i> {{ user.profile.phone_number|default:"-" }}</div></td>
+                <td><span class="badge {% if user.profile.status == 'active' %}badge-active{% elif user.profile.status == 'pending' %}badge-pending{% else %}badge-inactive{% endif %}">{{ user.profile.get_status_display }}</span></td>
+                <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                <td>
+                    <div class="action-buttons">
+                        <a href="{% url 'user_management:view_user' user.id %}" class="action-btn view" title="View"><i class="fas fa-eye"></i></a>
+                        <a href="{% url 'user_management:edit_user' user.id %}" class="action-btn edit" title="Edit"><i class="fas fa-edit"></i></a>
+                        <button class="action-btn toggle" title="Toggle Status" data-user-id="{{ user.id }}" data-user-name="{{ user.get_full_name|default:user.username }}" data-action="toggle">
+                            <i class="fas fa-power-off"></i>
+                        </button>
+                        {% if user.id != request.user.id %}
+                        <button class="action-btn delete" title="Delete" data-user-id="{{ user.id }}" data-user-name="{{ user.get_full_name|default:user.username }}" data-action="delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" style="text-align:center; padding:2rem;"><i class="fas fa-users" style="font-size:2rem; color:var(--text-muted);"></i><p>No users found</p></td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<div class="pagination">
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if user_type_filter %}&user_type={{ user_type_filter }}{% endif %}"><i class="fas fa-chevron-left"></i> Prev</a>{% endif %}
+    {% for num in page_obj.paginator.page_range %}{% if page_obj.number == num %}<span class="current">{{ num }}</span>{% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}<a href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}">{{ num }}</a>{% endif %}{% endfor %}
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}">Next <i class="fas fa-chevron-right"></i></a>{% endif %}
+</div>
+{% endif %}
+
+<!-- Custom Confirmation Modal -->
+<div id="confirmModal" class="custom-modal">
+    <div class="modal-content">
+        <div class="modal-icon" id="modalIcon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h3 class="modal-title" id="modalTitle">Confirm Action</h3>
+        <p class="modal-message" id="modalMessage">Are you sure you want to perform this action?</p>
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-confirm" id="confirmBtn">Confirm</button>
+            <button class="modal-btn modal-btn-cancel" id="cancelBtn">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('confirmModal');
+    const modalIcon = document.getElementById('modalIcon');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalMessage = document.getElementById('modalMessage');
+    const confirmBtn = document.getElementById('confirmBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    
+    let pendingAction = null;
+    let pendingUserId = null;
+    let pendingUserName = null;
+    
+    // Handle Toggle Status Button Clicks
+    const toggleButtons = document.querySelectorAll('.action-btn.toggle');
+    toggleButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const userId = this.getAttribute('data-user-id');
+            const userName = this.getAttribute('data-user-name');
+            const currentStatus = this.closest('tr').querySelector('.badge-active, .badge-pending, .badge-inactive').innerText;
+            let newStatus = currentStatus === 'Active' ? 'deactivate' : 'activate';
+            
+            pendingAction = 'toggle';
+            pendingUserId = userId;
+            pendingUserName = userName;
+            
+            modalIcon.className = 'modal-icon warning';
+            modalIcon.innerHTML = '<i class="fas fa-exchange-alt"></i>';
+            modalTitle.innerText = 'Confirm Status Change';
+            modalMessage.innerText = `Are you sure you want to ${newStatus} user "${userName}"?`;
+            modal.classList.add('active');
+        });
+    });
+    
+    // Handle Delete Button Clicks
+    const deleteButtons = document.querySelectorAll('.action-btn.delete');
+    deleteButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const userId = this.getAttribute('data-user-id');
+            const userName = this.getAttribute('data-user-name');
+            
+            pendingAction = 'delete';
+            pendingUserId = userId;
+            pendingUserName = userName;
+            
+            modalIcon.className = 'modal-icon danger';
+            modalIcon.innerHTML = '<i class="fas fa-trash-alt"></i>';
+            modalTitle.innerText = 'Delete User';
+            modalMessage.innerText = `Are you sure you want to permanently delete user "${userName}"? This action cannot be undone.`;
+            modal.classList.add('active');
+        });
+    });
+    
+    // Confirm Button Handler
+    confirmBtn.addEventListener('click', function() {
+        if (pendingAction && pendingUserId) {
+            if (pendingAction === 'toggle') {
+                window.location.href = `/user-management/users/${pendingUserId}/toggle-status/`;
+            } else if (pendingAction === 'delete') {
+                window.location.href = `/user-management/users/${pendingUserId}/delete/`;
+            }
+        }
+        modal.classList.remove('active');
+        pendingAction = null;
+        pendingUserId = null;
+        pendingUserName = null;
+    });
+    
+    // Cancel Button Handler
+    cancelBtn.addEventListener('click', function() {
+        modal.classList.remove('active');
+        pendingAction = null;
+        pendingUserId = null;
+        pendingUserName = null;
+    });
+    
+    // Close modal when clicking outside
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.classList.remove('active');
+            pendingAction = null;
+            pendingUserId = null;
+            pendingUserName = null;
+        }
+    });
+});
+</script>
+{% endblock %}

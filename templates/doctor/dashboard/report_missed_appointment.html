@@ -1,0 +1,127 @@
+<!-- templates/doctor/dashboard/report_missed_appointment.html -->
+{% extends 'doctor/dashboard/base.html' %} {% load static %} {% block title %}Report Missed Appointment | J.J. Dossen{% endblock %} {% block page_title %}Report Missed Appointment{% endblock %} {% block extra_css %}
+<style>
+    .report-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border: 1px solid var(--border);
+    }
+    
+    .patient-info {
+        background: var(--bg-main);
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg-main);
+        color: var(--text-primary);
+    }
+    
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+    
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+    }
+    
+    .btn-secondary {
+        background: var(--hover-bg);
+        color: var(--text-primary);
+        padding: 0.75rem 1.5rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        text-decoration: none;
+        margin-left: 1rem;
+    }
+    
+    .warning-box {
+        background: #FEF3C7;
+        border-left: 4px solid #F59E0B;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+</style>
+{% endblock %} {% block content %}
+<div class="report-card">
+    <div class="patient-info">
+        <h4>Patient Information</h4>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-top: 0.5rem;">
+            <div><strong>Name:</strong> {{ referral.patient.full_name }}</div>
+            <div><strong>Patient ID:</strong> {{ referral.patient.patient_id }}</div>
+            <div><strong>Referral Code:</strong> {{ referral.referral_code }}</div>
+            <div><strong>Scheduled Date:</strong> {{ referral.scheduled_date|date:"M d, Y h:i A"|default:"Not scheduled" }}</div>
+        </div>
+    </div>
+
+    <div class="warning-box">
+        <i class="fas fa-exclamation-triangle"></i>
+        <strong>Important:</strong> Reporting a missed appointment will notify the CHW immediately. The CHW will contact the patient to reschedule.
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label>Title</label>
+            <input type="text" name="title" class="form-control" value="Missed Appointment - {{ referral.patient.full_name }}" required>
+        </div>
+
+        <div class="form-group">
+            <label>Description</label>
+            <textarea name="description" class="form-control" required>Patient {{ referral.patient.full_name }} missed their scheduled appointment on {% if referral.scheduled_date %}{{ referral.scheduled_date|date:"F d, Y" }}{% else %}today{% endif %}.
+
+Please contact the patient to reschedule their appointment.</textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Recommendations for CHW</label>
+            <textarea name="recommendations" class="form-control" placeholder="e.g., Please call the patient to reschedule, remind them about importance of treatment...">1. Contact patient immediately
+2. Reschedule appointment
+3. Remind about treatment importance</textarea>
+        </div>
+
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="action_required" checked>
+                Require CHW to acknowledge this report
+            </label>
+        </div>
+
+        <div style="margin-top: 1.5rem;">
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-paper-plane"></i> Send Report to CHW
+            </button>
+            <a href="{% url 'doctor:view_referral' referral.id %}" class="btn-secondary">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,148 @@
+{% extends 'doctor/dashboard/base.html' %} {% load static %} {% block title %}Edit Prescription | J.J. Dossen{% endblock %} {% block page_title %}Edit Prescription{% endblock %} {% block extra_css %}
+<style>
+    .form-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .form-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-main);
+    }
+    
+    .form-body {
+        padding: 1.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-group label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .checkbox-group input {
+        width: auto;
+    }
+    
+    .btn-submit {
+        background: var(--primary);
+        color: white;
+        padding: 0.6rem 1.5rem;
+        border-radius: 10px;
+        border: none;
+        font-weight: 500;
+        cursor: pointer;
+        width: 100%;
+    }
+    
+    .btn-submit:hover {
+        background: var(--primary-dark);
+    }
+    
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %} {% block content %}
+<div class="form-card">
+    <div class="form-header">
+        <h3><i class="fas fa-edit"></i> Edit Prescription for {{ prescription.patient.full_name }}</h3>
+    </div>
+    <div class="form-body">
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label>Diagnosis *</label>
+                <textarea name="diagnosis" rows="3" required>{{ prescription.diagnosis }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Medications *</label>
+                <textarea name="medications" rows="4" required>{{ prescription.medications }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Instructions</label>
+                <textarea name="instructions" rows="2">{{ prescription.instructions }}</textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Duration (days)</label>
+                    <input type="number" name="duration_days" value="{{ prescription.duration_days }}" min="1" max="90">
+                </div>
+                <div class="form-group">
+                    <label>Follow-up Required</label>
+                    <div class="checkbox-group">
+                        <input type="checkbox" name="follow_up_required" {% if prescription.follow_up_required %}checked{% endif %}>
+                        <label>Yes, schedule follow-up</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Blood Pressure</label>
+                    <input type="text" name="blood_pressure" value="{{ prescription.blood_pressure }}" placeholder="e.g., 120/80">
+                </div>
+                <div class="form-group">
+                    <label>Temperature (°C)</label>
+                    <input type="number" name="temperature" step="0.1" value="{{ prescription.temperature }}" placeholder="36.5">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Pulse Rate (bpm)</label>
+                    <input type="number" name="pulse_rate" value="{{ prescription.pulse_rate }}" placeholder="72">
+                </div>
+                <div class="form-group">
+                    <label>Weight (kg)</label>
+                    <input type="number" name="weight" step="0.1" value="{{ prescription.weight }}" placeholder="65.5">
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-save"></i> Update Prescription
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

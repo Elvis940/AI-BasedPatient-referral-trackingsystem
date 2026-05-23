@@ -1,0 +1,671 @@
+{% extends 'chw/dashboard/base.html' %} {% load static %} {% block title %}AI Assessment Result | J.J. Dossen{% endblock %} {% block page_title %}Assessment Result{% endblock %} {% block extra_css %}
+<style>
+    .result-header {
+        padding: 1.5rem;
+        text-align: center;
+        color: white;
+        border-radius: 16px 16px 0 0;
+    }
+    
+    .result-header.emergency {
+        background: linear-gradient(135deg, #DC2626, #EF4444);
+    }
+    
+    .result-header.urgent {
+        background: linear-gradient(135deg, #D97706, #F59E0B);
+    }
+    
+    .result-header.non_urgent {
+        background: linear-gradient(135deg, #059669, #10B981);
+    }
+    
+    .urgency-icon {
+        font-size: 3rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .urgency-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+    
+    .confidence-badge {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.25rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .info-item {
+        background: var(--bg-main);
+        padding: 1rem;
+        border-radius: 12px;
+        text-align: center;
+    }
+    
+    .info-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+    }
+    
+    .info-value {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    
+    .reasoning-box {
+        background: #EFF6FF;
+        border-left: 4px solid #3B82F6;
+        padding: 1rem;
+        border-radius: 12px;
+        margin: 1rem 0;
+        white-space: pre-line;
+    }
+    
+    .warning-box {
+        background: #FEF3C7;
+        border-left: 4px solid var(--warning);
+        padding: 1rem;
+        border-radius: 12px;
+        margin: 1rem 0;
+    }
+    
+    .warning-list {
+        margin-top: 0.5rem;
+        padding-left: 1.5rem;
+    }
+    
+    .warning-list li {
+        margin-bottom: 0.25rem;
+    }
+    
+    .action-box {
+        background: #ECFDF5;
+        border-left: 4px solid var(--success);
+        padding: 1rem;
+        border-radius: 12px;
+        margin: 1rem 0;
+    }
+    
+    .action-list {
+        margin-top: 0.5rem;
+        padding-left: 1.5rem;
+    }
+    
+    .action-list li {
+        margin-bottom: 0.25rem;
+    }
+    
+    .doctor-list {
+        margin: 1rem 0;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .doctor-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .doctor-item:last-child {
+        border-bottom: none;
+    }
+    
+    .doctor-item:hover {
+        background: var(--hover-bg);
+    }
+    
+    .doctor-item.selected {
+        background: #EFF6FF;
+        border-left: 3px solid var(--primary);
+    }
+    
+    .doctor-info h4 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    
+    .doctor-info p {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+    
+    .doctor-status {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+    
+    .status-available {
+        background: #D1FAE5;
+        color: #059669;
+    }
+    
+    .status-busy {
+        background: #FEF3C7;
+        color: #D97706;
+    }
+    
+    .status-off {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+    
+    .doctor-select {
+        width: 20px;
+        height: 20px;
+        margin-left: 1rem;
+        cursor: pointer;
+    }
+    
+    .skip-option {
+        margin: 1rem 0;
+        padding: 1rem;
+        background: var(--bg-main);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .skip-option:hover {
+        background: var(--hover-bg);
+    }
+    
+    .skip-option.selected {
+        background: #EFF6FF;
+        border-left: 3px solid var(--primary);
+    }
+    
+    .fallback-message {
+        background: #FEF3C7;
+        border-left: 4px solid var(--warning);
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+    }
+    
+    .external-facilities {
+        margin: 1rem 0;
+    }
+    
+    .facility-item {
+        background: var(--bg-main);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        border: 1px solid var(--border);
+    }
+    
+    .btn-outline {
+        background: transparent;
+        border: 1px solid var(--primary);
+        color: var(--primary);
+        padding: 0.4rem 1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .btn-outline:hover {
+        background: var(--primary);
+        color: white;
+    }
+    
+    .no-doctors-message {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+    }
+    
+    .no-doctors-message i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+        padding: 0.6rem 1.8rem;
+        border-radius: 10px;
+        border: none;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+    }
+    
+    .btn-primary:disabled {
+        background: var(--text-muted);
+        cursor: not-allowed;
+    }
+    
+    .btn-secondary {
+        background: var(--hover-bg);
+        color: var(--text-secondary);
+        padding: 0.6rem 1.8rem;
+        border-radius: 10px;
+        text-decoration: none;
+        border: 1px solid var(--border);
+        transition: all 0.2s;
+    }
+    
+    .btn-secondary:hover {
+        background: var(--border);
+        color: var(--text-primary);
+    }
+    
+    .feedback-section {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+    }
+    
+    .radio-group {
+        display: flex;
+        gap: 1.5rem;
+        margin: 0.5rem 0;
+    }
+    
+    .radio-option {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+    }
+    
+    .override-fields {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: var(--bg-main);
+        border-radius: 12px;
+    }
+    
+    .external-actions {
+        margin-top: 1rem;
+    }
+    
+    .external-actions ul {
+        margin-top: 0.5rem;
+        padding-left: 1.5rem;
+    }
+    
+    .info-note {
+        background: #DBEAFE;
+        border-left: 4px solid var(--info);
+        padding: 0.75rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        font-size: 0.8rem;
+    }
+    
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+        .doctor-item {
+            flex-direction: column;
+            text-align: center;
+            gap: 0.5rem;
+        }
+        .radio-group {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+    }
+</style>
+{% endblock %} {% block content %}
+<div class="card">
+    <div class="result-header {{ assessment.ai_urgency }}">
+        <div class="urgency-icon">
+            {% if assessment.ai_urgency == 'emergency' %}
+            <i class="fas fa-ambulance"></i> {% elif assessment.ai_urgency == 'urgent' %}
+            <i class="fas fa-exclamation-triangle"></i> {% else %}
+            <i class="fas fa-clinic-medical"></i> {% endif %}
+        </div>
+        <div class="urgency-title">{{ urgency_display|upper }}</div>
+        <div class="confidence-badge">
+            <i class="fas fa-brain"></i> AI Confidence: {{ assessment.ai_confidence }}%
+        </div>
+    </div>
+
+    <div class="card-body">
+        <!-- Info Note -->
+        <div class="info-note">
+            <i class="fas fa-info-circle"></i>
+            <strong>Note:</strong> You can create a referral even without selecting a doctor. Admin will review and assign a doctor during approval.
+        </div>
+
+        <!-- Quick Info Grid -->
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Recommended Specialist</div>
+                <div class="info-value">{{ specialist_display }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Patient Name</div>
+                <div class="info-value">{{ assessment.patient.full_name }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Primary Complaint</div>
+                <div class="info-value">{{ assessment.primary_complaint }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Severity Score</div>
+                <div class="info-value">{{ assessment.severity_score }}/10</div>
+            </div>
+        </div>
+
+        <!-- AI Reasoning -->
+        {% if assessment.ai_reasoning %}
+        <div class="reasoning-box">
+            <i class="fas fa-robot"></i> <strong>AI Reasoning:</strong><br> {{ assessment.ai_reasoning|linebreaks }}
+        </div>
+        {% endif %}
+
+        <!-- Warning Signs -->
+        {% if warning_list %}
+        <div class="warning-box">
+            <i class="fas fa-exclamation-triangle"></i> <strong>Warning Signs Identified:</strong>
+            <ul class="warning-list">
+                {% for warning in warning_list %} {% if warning %}
+                <li>{{ warning }}</li>
+                {% endif %} {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Action Required -->
+        {% if action_list %}
+        <div class="action-box">
+            <i class="fas fa-clipboard-list"></i> <strong>Action Required:</strong>
+            <ul class="action-list">
+                {% for action in action_list %} {% if action %}
+                <li>{{ action }}</li>
+                {% endif %} {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Doctor Selection Section -->
+        <h4 style="margin: 1.5rem 0 1rem 0;">
+            <i class="fas fa-user-md"></i> Select Doctor (Optional)
+        </h4>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+            You can select a doctor below, or skip to let admin assign one.
+        </p>
+
+        <!-- Skip Option (No Doctor) -->
+        <div class="skip-option" id="skipDoctorOption" onclick="selectSkipOption()">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <input type="radio" name="selected_doctor" value="" id="skipDoctorRadio" class="doctor-select" style="margin-left: 0;">
+                <div>
+                    <strong><i class="fas fa-hospital"></i> No Doctor Selected</strong>
+                    <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Admin will assign a doctor during approval</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Doctors List -->
+        {% if available_doctors %}
+        <div class="doctor-list" id="doctorList">
+            {% for doctor in available_doctors %}
+            <div class="doctor-item" data-doctor-id="{{ doctor.id }}" onclick="selectDoctor(this, {{ doctor.id }})">
+                <div class="doctor-info">
+                    <h4>Dr. {{ doctor.name }}</h4>
+                    <p>
+                        <i class="fas fa-stethoscope"></i> {{ doctor.specialization }} {% if doctor.years_experience %} | <i class="fas fa-briefcase"></i> {{ doctor.years_experience }} years {% endif %} {% if doctor.consultation_fee %} | <i class="fas fa-dollar-sign"></i>                        ${{ doctor.consultation_fee }} {% endif %}
+                    </p>
+                    <p><i class="fas fa-map-marker-alt"></i> {{ doctor.office_location|default:"J.J. Dossen Hospital" }}</p>
+                    <p><i class="fas fa-phone"></i> {{ doctor.office_phone|default:"Call hospital switchboard" }}</p>
+                    {% if doctor.languages_spoken %}
+                    <p><i class="fas fa-language"></i> Speaks: {{ doctor.languages_spoken }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <span class="doctor-status 
+                        {% if doctor.availability_status == 'available' %}status-available
+                        {% elif doctor.availability_status == 'busy' %}status-busy
+                        {% else %}status-off{% endif %}">
+                        {{ doctor.availability_status|title }}
+                    </span>
+                    <input type="radio" name="selected_doctor" value="{{ doctor.id }}" class="doctor-select">
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% elif fallback_doctors %}
+        <!-- Fallback Doctors -->
+        <div class="fallback-message">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Specialist Not Available:</strong> {{ specialist_display }} is currently not available at J.J. Dossen Hospital.
+        </div>
+        <div class="doctor-list" id="doctorList">
+            {% for doctor in fallback_doctors %}
+            <div class="doctor-item" data-doctor-id="{{ doctor.id }}" onclick="selectDoctor(this, {{ doctor.id }})">
+                <div class="doctor-info">
+                    <h4>Dr. {{ doctor.name }}</h4>
+                    <p><i class="fas fa-stethoscope"></i> {{ doctor.specialization }}</p>
+                    <p><i class="fas fa-map-marker-alt"></i> {{ doctor.office_location }}</p>
+                    {% if doctor.fallback_reason %}
+                    <p><small class="text-muted">{{ doctor.fallback_reason }}</small></p>
+                    {% endif %}
+                </div>
+                <div>
+                    <span class="doctor-status status-available">Available</span>
+                    <input type="radio" name="selected_doctor" value="{{ doctor.id }}" class="doctor-select">
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% elif external_referral %}
+        <!-- External Referral Options -->
+        <div class="warning-box" style="background: #FEE2E2;">
+            <i class="fas fa-ambulance"></i>
+            <strong>No Doctors Available</strong>
+            <p>{{ external_referral.action_needed }}</p>
+        </div>
+
+        <h4 style="margin: 1.5rem 0 1rem 0;">
+            <i class="fas fa-building"></i> External Facilities
+        </h4>
+        <div class="external-facilities">
+            {% for facility in external_referral.facilities %}
+            <div class="facility-item">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                    <div>
+                        <strong><i class="fas fa-hospital"></i> {{ facility.name }}</strong>
+                        <p><i class="fas fa-map-marker-alt"></i> {{ facility.location }} ({{ facility.distance }})</p>
+                        <p><i class="fas fa-phone"></i> {{ facility.phone }}</p>
+                    </div>
+                    <div>
+                        <button type="button" class="btn-outline" onclick="window.location.href='tel:{{ facility.phone }}'">
+                            <i class="fas fa-phone-alt"></i> Call
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="warning-box" style="background: #FEE2E2;">
+            <i class="fas fa-exclamation-circle"></i>
+            <strong>No Referral Options Available</strong>
+            <p>Please contact the hospital administrator.</p>
+        </div>
+        {% endif %}
+
+        <!-- CHW Feedback Section -->
+        <div class="feedback-section">
+            <h4 style="margin-bottom: 0.5rem;"><i class="fas fa-thumbs-up"></i> Do you agree with this assessment?</h4>
+            <div class="radio-group">
+                <label class="radio-option">
+                    <input type="radio" name="chw_feedback" value="agree" id="agreeRadio"> Yes, AI is correct
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="chw_feedback" value="disagree" id="disagreeRadio"> No, I disagree
+                </label>
+            </div>
+
+            <div id="overrideFields" style="display: none;">
+                <div class="override-fields">
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem;">What should it be instead?</label>
+                        <select id="chwOverride" style="width: 100%; padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border);">
+                            <option value="">Select correct urgency/specialist</option>
+                            <option value="emergency_cardiology">Emergency - Cardiology</option>
+                            <option value="emergency_neurology">Emergency - Neurology</option>
+                            <option value="emergency_pediatrics">Emergency - Pediatrics</option>
+                            <option value="urgent_general">Urgent - General Medicine</option>
+                            <option value="non_urgent_routine">Non-Urgent - Routine</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="display: block; margin-bottom: 0.5rem;">Notes (why you disagree)</label>
+                        <textarea id="chwNotes" rows="2" style="width: 100%; padding: 0.5rem; border-radius: 8px; border: 1px solid var(--border);" placeholder="Explain why the AI recommendation is incorrect..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form to submit referral -->
+        <form method="post" style="margin-top: 1.5rem;" id="referralForm">
+            {% csrf_token %}
+            <input type="hidden" name="selected_doctor_id" id="selectedDoctorId" value="">
+            <input type="hidden" name="chw_agreed" id="chwAgreed" value="true">
+            <input type="hidden" name="chw_override" id="chwOverrideValue" value="">
+            <input type="hidden" name="chw_notes" id="chwNotesValue" value="">
+
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button type="submit" class="btn-primary" id="submitReferralBtn">
+                    <i class="fas fa-check"></i> Create Referral
+                </button>
+                <a href="{% url 'ai_assessment:symptom_checker' assessment.patient.id %}" class="btn-secondary">
+                    <i class="fas fa-redo"></i> Re-assess
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Doctor selection
+    let selectedDoctorId = null;
+    const doctorItems = document.querySelectorAll('.doctor-item');
+    const skipOption = document.getElementById('skipDoctorOption');
+    const skipRadio = document.getElementById('skipDoctorRadio');
+    const submitBtn = document.getElementById('submitReferralBtn');
+    const selectedDoctorInput = document.getElementById('selectedDoctorId');
+
+    // Feedback elements
+    const agreeRadio = document.getElementById('agreeRadio');
+    const disagreeRadio = document.getElementById('disagreeRadio');
+    const overrideFields = document.getElementById('overrideFields');
+    const chwOverride = document.getElementById('chwOverride');
+    const chwNotes = document.getElementById('chwNotes');
+    const chwAgreed = document.getElementById('chwAgreed');
+    const chwOverrideValue = document.getElementById('chwOverrideValue');
+    const chwNotesValue = document.getElementById('chwNotesValue');
+
+    // Select a doctor
+    function selectDoctor(element, doctorId) {
+        // Remove selected class from all doctor items
+        doctorItems.forEach(item => {
+            item.classList.remove('selected');
+            const radio = item.querySelector('.doctor-select');
+            if (radio) radio.checked = false;
+        });
+
+        // Remove selected class from skip option
+        if (skipOption) skipOption.classList.remove('selected');
+        if (skipRadio) skipRadio.checked = false;
+
+        // Add selected class to clicked
+        element.classList.add('selected');
+        const radio = element.querySelector('.doctor-select');
+        if (radio) radio.checked = true;
+
+        selectedDoctorId = doctorId;
+        selectedDoctorInput.value = doctorId;
+        submitBtn.disabled = false;
+    }
+
+    // Select skip option (no doctor)
+    function selectSkipOption() {
+        // Remove selected class from all doctor items
+        doctorItems.forEach(item => {
+            item.classList.remove('selected');
+            const radio = item.querySelector('.doctor-select');
+            if (radio) radio.checked = false;
+        });
+
+        // Add selected class to skip option
+        if (skipOption) skipOption.classList.add('selected');
+        if (skipRadio) skipRadio.checked = true;
+
+        selectedDoctorId = null;
+        selectedDoctorInput.value = '';
+        submitBtn.disabled = false;
+    }
+
+    // Feedback toggle
+    if (agreeRadio && disagreeRadio) {
+        agreeRadio.addEventListener('change', function() {
+            if (this.checked) {
+                overrideFields.style.display = 'none';
+                chwAgreed.value = 'true';
+            }
+        });
+
+        disagreeRadio.addEventListener('change', function() {
+            if (this.checked) {
+                overrideFields.style.display = 'block';
+                chwAgreed.value = 'false';
+            }
+        });
+    }
+
+    // Form submission - set override values
+    const referralForm = document.getElementById('referralForm');
+    if (referralForm) {
+        referralForm.addEventListener('submit', function(e) {
+            if (disagreeRadio && disagreeRadio.checked) {
+                if (chwOverride) {
+                    chwOverrideValue.value = chwOverride.value;
+                }
+                if (chwNotes) {
+                    chwNotesValue.value = chwNotes.value;
+                }
+            }
+        });
+    }
+
+    // Enable submit button by default (skip option is selected by default)
+    submitBtn.disabled = false;
+</script>
+{% endblock %}

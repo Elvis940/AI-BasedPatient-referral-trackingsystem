@@ -1,0 +1,293 @@
+{% extends 'chw/dashboard/base.html' %} {% load static %} {% block title %}AI Symptom Checker | J.J. Dossen{% endblock %} {% block page_title %}AI Symptom Checker{% endblock %} {% block extra_css %}
+<style>
+    .info-banner {
+        background: #EFF6FF;
+        border-left: 4px solid #3B82F6;
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .info-banner i {
+        font-size: 1.5rem;
+        color: #3B82F6;
+    }
+    
+    .patient-summary {
+        background: var(--bg-main);
+        border-radius: 16px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .patient-avatar {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+    
+    .patient-details h4 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    
+    .patient-details p {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+    
+    .form-section {
+        background: var(--bg-main);
+        border-radius: 16px;
+        padding: 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+    
+    .form-section h4 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-group label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-family: 'Inter', sans-serif;
+        background: var(--bg-card);
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.1);
+    }
+    
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+        padding: 0.6rem 1.8rem;
+        border-radius: 10px;
+        border: none;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background: var(--hover-bg);
+        color: var(--text-secondary);
+        padding: 0.6rem 1.8rem;
+        border-radius: 10px;
+        text-decoration: none;
+        border: 1px solid var(--border);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .severity-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+    }
+    
+    .form-hint {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+    }
+    
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %} {% block content %}
+<!-- Patient Information Summary -->
+<div class="patient-summary">
+    <div class="patient-avatar">
+        {{ patient.first_name|first|upper }}{{ patient.last_name|first|upper }}
+    </div>
+    <div class="patient-details">
+        <h4>{{ patient.full_name }}</h4>
+        <p><i class="fas fa-id-card"></i> {{ patient.patient_id }} | <i class="fas fa-calendar"></i> {{ patient.age }} years | <i class="fas fa-venus-mars"></i> {{ patient.get_gender_display }}</p>
+        <p><i class="fas fa-map-marker-alt"></i> {{ patient.village }}, {{ patient.district }}</p>
+    </div>
+</div>
+
+<!-- Info Banner -->
+<div class="info-banner">
+    <i class="fas fa-robot"></i>
+    <div>
+        <strong>AI-Powered Assessment</strong><br> Enter the patient's current symptoms and vitals. The AI will analyze the data and recommend urgency level and specialist. {% if not models_loaded %}
+        <span style="color: var(--danger); display: block;">⚠️ AI models are being trained. Results will use fallback logic.</span> {% endif %}
+    </div>
+</div>
+
+<!-- Symptom Assessment Form -->
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fas fa-stethoscope"></i> Current Symptoms & Vitals</h3>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+
+            <!-- Current Symptoms Section -->
+            <div class="form-section">
+                <h4><i class="fas fa-head-side-medical"></i> Current Symptoms</h4>
+                <div class="form-group">
+                    <label class="required-field">Primary Complaint</label> {{ form.primary_complaint }}
+                    <div class="form-hint">Main symptom the patient is experiencing</div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="required-field">Duration</label> {{ form.symptom_duration }}
+                        <div class="form-hint">e.g., 2 hours, 3 days, 1 week</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="required-field">Severity (1-10)</label> {{ form.severity_score }}
+                        <div class="severity-labels">
+                            <span>1 = Mild</span>
+                            <span>5 = Moderate</span>
+                            <span>10 = Severe</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Associated Symptoms</label> {{ form.associated_symptoms }}
+                    <div class="form-hint">List any other symptoms (comma-separated)</div>
+                </div>
+                <div class="form-group">
+                    <label>Symptom Progression</label> {{ form.symptom_progression }}
+                </div>
+            </div>
+
+            <!-- Physical Examination Section -->
+            <div class="form-section">
+                <h4><i class="fas fa-stethoscope"></i> Physical Examination</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Consciousness Level</label> {{ form.consciousness }}
+                    </div>
+                    <div class="form-group">
+                        <label>Breathing Status</label> {{ form.breathing_status }}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Skin Condition</label> {{ form.skin_condition }}
+                        <div class="form-hint">e.g., Pale, Sweaty, Rash, Normal</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Hydration Status</label> {{ form.hydration_status }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vitals Section -->
+            <div class="form-section">
+                <h4><i class="fas fa-heartbeat"></i> Current Vitals</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Temperature (°C)</label> {{ form.current_temperature }}
+                    </div>
+                    <div class="form-group">
+                        <label>Blood Pressure</label>
+                        <div class="form-row" style="gap: 0.5rem;">
+                            {{ form.current_bp_systolic }}
+                            <span style="align-self: center;">/</span> {{ form.current_bp_diastolic }}
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Pulse Rate (bpm)</label> {{ form.current_pulse }}
+                    </div>
+                    <div class="form-group">
+                        <label>Respiratory Rate</label> {{ form.respiratory_rate }}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Oxygen Saturation (%)</label> {{ form.oxygen_saturation }}
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-microphone-alt"></i> Run AI Assessment
+                </button>
+                <a href="{% url 'patients:view_patient' patient.id %}" class="btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Auto-format severity display
+    const severityInput = document.getElementById('{{ form.severity_score.id_for_label }}');
+    if (severityInput) {
+        severityInput.addEventListener('input', function() {
+            let val = parseInt(this.value);
+            if (val < 1) this.value = 1;
+            if (val > 10) this.value = 10;
+        });
+    }
+</script>
+{% endblock %}

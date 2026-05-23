@@ -1,0 +1,172 @@
+{% extends 'chw/dashboard/base.html' %} {% load static %} {% block title %}Assessment History | J.J. Dossen{% endblock %} {% block page_title %}Assessment History - {{ patient.full_name }}{% endblock %} {% block extra_css %}
+<style>
+    .history-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .history-table th {
+        padding: 0.75rem 1rem;
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        background: var(--bg-main);
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .history-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.8rem;
+    }
+    
+    .history-table tr:hover {
+        background: var(--bg-main);
+    }
+    
+    .urgency-badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+    
+    .urgency-emergency {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+    
+    .urgency-urgent {
+        background: #FEF3C7;
+        color: #D97706;
+    }
+    
+    .urgency-non_urgent {
+        background: #D1FAE5;
+        color: #059669;
+    }
+    
+    .view-link {
+        color: var(--primary);
+        text-decoration: none;
+    }
+    
+    .view-link:hover {
+        text-decoration: underline;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-muted);
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .patient-info-card {
+        background: var(--bg-main);
+        border-radius: 16px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .patient-avatar {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+</style>
+{% endblock %} {% block content %}
+<!-- Patient Info -->
+<div class="patient-info-card">
+    <div class="patient-avatar">
+        {{ patient.first_name|first|upper }}{{ patient.last_name|first|upper }}
+    </div>
+    <div>
+        <h4 style="margin-bottom: 0.25rem;">{{ patient.full_name }}</h4>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">
+            {{ patient.patient_id }} | {{ patient.age }} years | {{ patient.village }}
+        </p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fas fa-history"></i> Assessment History</h3>
+    </div>
+    <div class="card-body">
+        {% if assessments %}
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Primary Complaint</th>
+                    <th>Severity</th>
+                    <th>AI Urgency</th>
+                    <th>Specialist</th>
+                    <th>Confidence</th>
+                    <th>CHW Agreed?</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for assessment in assessments %}
+                <tr>
+                    <td>{{ assessment.created_at|date:"M d, Y H:i" }}</td>
+                    <td>{{ assessment.primary_complaint|truncatechars:30 }}</td>
+                    <td>{{ assessment.severity_score }}/10</td>
+                    <td>
+                        <span class="urgency-badge urgency-{{ assessment.ai_urgency }}">
+                            {{ assessment.get_ai_urgency_display|truncatechars:15 }}
+                        </span>
+                    </td>
+                    <td>{{ assessment.get_ai_specialist_display|truncatechars:20 }}</td>
+                    <td>{{ assessment.ai_confidence }}%</td>
+                    <td>
+                        {% if assessment.chw_agreed %}
+                        <i class="fas fa-check-circle" style="color: var(--success);"></i> Yes {% elif assessment.chw_agreed is False %}
+                        <i class="fas fa-times-circle" style="color: var(--danger);"></i> No {% else %}
+                        <span class="text-muted">Pending</span> {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'ai_assessment:assessment_result' assessment.id %}" class="view-link">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-stethoscope"></i>
+            <p>No assessments found for this patient.</p>
+            <a href="{% url 'ai_assessment:symptom_checker' patient.id %}" class="btn-primary" style="display: inline-block; margin-top: 1rem;">
+                <i class="fas fa-plus"></i> Run First Assessment
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+    <a href="{% url 'patients:view_patient' patient.id %}" class="btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Patient
+    </a>
+</div>
+{% endblock %}

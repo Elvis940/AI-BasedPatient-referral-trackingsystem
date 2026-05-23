@@ -1,0 +1,79 @@
+{% extends 'doctor/dashboard/base.html' %} {% load static %} {% block title %}Today's Appointments | J.J. Dossen{% endblock %} {% block page_title %}Today's Appointments - {{ today|date:"F d, Y" }}{% endblock %} {% block extra_css %}
+<style>
+    .appointments-list {
+        background: var(--bg-card);
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+    
+    .appointment-item {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .appointment-item:last-child {
+        border-bottom: none;
+    }
+    
+    .appointment-item:hover {
+        background: var(--hover-bg);
+        cursor: pointer;
+    }
+    
+    .appointment-time {
+        background: var(--primary);
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-muted);
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %} {% block content %}
+<div class="appointments-list">
+    {% if appointments %} {% for appointment in appointments %}
+    <div class="appointment-item" onclick="window.location.href='{% url 'referrals:referral_detail' appointment.id %}'">
+        <div>
+            <div class="appointment-time">
+                <i class="fas fa-clock"></i> {{ appointment.scheduled_date|date:"h:i A" }}
+            </div>
+        </div>
+        <div>
+            <strong>{{ appointment.patient.full_name }}</strong><br>
+            <small>{{ appointment.patient.patient_id }} | {{ appointment.patient.age }} years</small>
+        </div>
+        <div>
+            <span style="background: {% if appointment.urgency == 'emergency' %}#FEE2E2; color:#DC2626{% else %}#D1FAE5; color:#059669{% endif %}; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem;">
+                    {{ appointment.get_urgency_display }}
+                </span>
+        </div>
+        <div>
+            <small>Referred by: {{ appointment.chw.get_full_name|default:appointment.chw.username }}</small>
+        </div>
+    </div>
+    {% endfor %} {% else %}
+    <div class="empty-state">
+        <i class="fas fa-calendar-check"></i>
+        <p>No appointments scheduled for today</p>
+        <p style="font-size: 0.8rem;">Check back later or view pending referrals</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

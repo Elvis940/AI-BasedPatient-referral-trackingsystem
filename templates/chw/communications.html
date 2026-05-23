@@ -1,0 +1,344 @@
+{% extends 'chw/dashboard/base.html' %} {% load static %} {% block title %}Messages from Doctors | J.J. Dossen{% endblock %} {% block page_title %}Messages from Doctors{% endblock %} {% block extra_css %}
+<style>
+    .comm-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        margin-bottom: 1rem;
+        border: 1px solid var(--border);
+        overflow: hidden;
+        transition: all 0.2s;
+    }
+    
+    .comm-card.unread {
+        border-left: 4px solid var(--primary);
+        background: linear-gradient(90deg, rgba(37, 99, 235, 0.05) 0%, var(--bg-card) 100%);
+    }
+    
+    .comm-header {
+        padding: 1rem;
+        background: var(--bg-main);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .comm-body {
+        padding: 1rem;
+    }
+    
+    .priority-high {
+        background: #FEE2E2;
+        color: #DC2626;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+    
+    .priority-medium {
+        background: #FEF3C7;
+        color: #D97706;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+    
+    .priority-low {
+        background: #DBEAFE;
+        color: #2563EB;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+    
+    .comm-type {
+        background: var(--hover-bg);
+        padding: 0.2rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.75rem;
+        border-radius: 6px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        border: none;
+    }
+    
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+    }
+    
+    .btn-success {
+        background: var(--success);
+        color: white;
+    }
+    
+    .filter-bar {
+        background: var(--bg-card);
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    
+    .filter-bar select,
+    .filter-bar input {
+        padding: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg-main);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: var(--bg-card);
+        border-radius: 16px;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+    
+    .action-required {
+        background: #FEF3C7;
+        padding: 0.5rem;
+        border-radius: 8px;
+        margin-top: 0.5rem;
+        font-size: 0.75rem;
+        display: inline-block;
+    }
+    
+    .doctor-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .doctor-avatar {
+        width: 32px;
+        height: 32px;
+        background: var(--primary);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.8rem;
+    }
+</style>
+{% endblock %} {% block content %} {% if unread_count > 0 %}
+<div class="alert" style="background: #DBEAFE; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <i class="fas fa-envelope"></i>
+        <strong>You have {{ unread_count }} unread message{{ unread_count|pluralize }} from doctors.</strong>
+    </div>
+    <button onclick="markAllAsRead()" class="btn-sm btn-primary" style="background: var(--primary);">Mark All as Read</button>
+</div>
+{% endif %}
+
+<div class="filter-bar">
+    <form method="get" style="display: flex; gap: 1rem; flex-wrap: wrap; width: 100%;">
+        <select name="priority">
+            <option value="">All Priorities</option>
+            <option value="high" {% if priority_filter == 'high' %}selected{% endif %}>High Priority</option>
+            <option value="medium" {% if priority_filter == 'medium' %}selected{% endif %}>Medium Priority</option>
+            <option value="low" {% if priority_filter == 'low' %}selected{% endif %}>Low Priority</option>
+        </select>
+        <select name="type">
+            <option value="">All Types</option>
+            <option value="missed_appointment" {% if type_filter == 'missed_appointment' %}selected{% endif %}>Missed Appointment</option>
+            <option value="treatment_update" {% if type_filter == 'treatment_update' %}selected{% endif %}>Treatment Update</option>
+            <option value="medication_issue" {% if type_filter == 'medication_issue' %}selected{% endif %}>Medication Issue</option>
+            <option value="follow_up_needed" {% if type_filter == 'follow_up_needed' %}selected{% endif %}>Follow-up Needed</option>
+            <option value="emergency_alert" {% if type_filter == 'emergency_alert' %}selected{% endif %}>Emergency Alert</option>
+        </select>
+        <button type="submit" class="btn-sm btn-primary" style="background: var(--primary);">Filter</button>
+        <a href="{% url 'chw:chw_communications' %}" class="btn-sm" style="background: var(--hover-bg); text-decoration: none;">Clear</a>
+    </form>
+</div>
+
+{% if communications %} {% for comm in communications %}
+<div class="comm-card {% if not comm.is_read %}unread{% endif %}" data-comm-id="{{ comm.id }}">
+    <div class="comm-header">
+        <div class="doctor-info">
+            <div class="doctor-avatar">
+                <i class="fas fa-user-md"></i>
+            </div>
+            <div>
+                <strong>Dr. {{ comm.from_user.get_full_name }}</strong>
+                <span class="priority-{{ comm.priority }}">{{ comm.get_priority_display }}</span> {% if comm.requires_action and not comm.action_taken %}
+                <span class="action-required">⚠️ Action Required</span> {% endif %}
+            </div>
+        </div>
+        <div style="font-size: 0.7rem; color: var(--text-muted);">
+            <i class="fas fa-clock"></i> {{ comm.created_at|date:"M d, Y h:i A" }}
+        </div>
+    </div>
+    <div class="comm-body">
+        <h4 style="margin-bottom: 0.5rem;">{{ comm.subject }}</h4>
+        <p style="margin: 0.5rem 0; line-height: 1.5;">{{ comm.message|linebreaks }}</p>
+
+        <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+            <span class="comm-type">
+                    <i class="fas fa-tag"></i> {{ comm.get_communication_type_display }}
+                </span>
+            <a href="{% url 'chw:patient_tracking' comm.referral.patient.id %}" class="btn-sm btn-primary" style="background: var(--primary); text-decoration: none;">
+                <i class="fas fa-eye"></i> View Patient
+            </a>
+            {% if not comm.is_read %}
+            <button onclick="markAsRead({{ comm.id }})" class="btn-sm btn-success">
+                    <i class="fas fa-check"></i> Mark as Read
+                </button> {% endif %} {% if comm.requires_action and not comm.action_taken %}
+            <button onclick="openActionModal({{ comm.id }}, '{{ comm.subject|escapejs }}')" class="btn-sm" style="background: var(--warning); color: white; border: none;">
+                    <i class="fas fa-clipboard-list"></i> Take Action
+                </button> {% endif %}
+        </div>
+    </div>
+</div>
+{% endfor %} {% else %}
+<div class="empty-state">
+    <i class="fas fa-inbox"></i>
+    <h3>No Messages</h3>
+    <p>You don't have any messages from doctors yet.</p>
+    <small class="text-muted">When doctors send you updates about patients, they will appear here.</small>
+</div>
+{% endif %}
+
+<!-- Action Modal -->
+<div id="actionModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+    <div class="modal-content" style="background: var(--bg-card); border-radius: 16px; max-width: 500px; width: 90%; padding: 1.5rem;">
+        <h3>Take Action</h3>
+        <p id="actionMessage"></p>
+        <form id="actionForm" method="post">
+            {% csrf_token %}
+            <div class="form-group" style="margin-top: 1rem;">
+                <label>Action Taken:</label>
+                <textarea name="action_notes" class="form-control" rows="3" placeholder="Describe what action you took..." required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 8px;"></textarea>
+            </div>
+            <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem;">
+                <button type="button" onclick="closeActionModal()" class="btn-secondary" style="padding: 0.5rem 1rem;">Cancel</button>
+                <button type="submit" class="btn-primary">Submit Action</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function markAsRead(commId) {
+        fetch(`/chw/mark-communication-read/${commId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const card = document.querySelector(`.comm-card[data-comm-id="${commId}"]`);
+                    if (card) {
+                        card.classList.remove('unread');
+                    }
+                    // Update unread count
+                    location.reload();
+                }
+            });
+    }
+
+    function markAllAsRead() {
+        fetch("{% url 'chw:mark_all_read' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            });
+    }
+
+    function openActionModal(commId, subject) {
+        const modal = document.getElementById('actionModal');
+        const actionMessage = document.getElementById('actionMessage');
+        const actionForm = document.getElementById('actionForm');
+
+        actionMessage.innerHTML = `<strong>${subject}</strong><br><br>Please describe what action you took to address this communication.`;
+        actionForm.action = `/chw/take-action/${commId}/`;
+        modal.style.display = 'flex';
+    }
+
+    function closeActionModal() {
+        document.getElementById('actionModal').style.display = 'none';
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('actionModal');
+        if (event.target === modal) {
+            closeActionModal();
+        }
+    }
+</script>
+
+<style>
+    .modal {
+        display: none;
+    }
+    
+    .modal.active {
+        display: flex;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .btn-secondary {
+        background: var(--hover-bg);
+        border: 1px solid var(--border);
+        cursor: pointer;
+    }
+</style>
+{% endblock %}

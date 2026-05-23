@@ -1,0 +1,95 @@
+{% extends 'doctor/dashboard/base.html' %} {% load static %} {% block title %}Delete Prescription | J.J. Dossen{% endblock %} {% block page_title %}Delete Prescription{% endblock %} {% block extra_css %}
+<style>
+    .delete-container {
+        max-width: 500px;
+        margin: 2rem auto;
+    }
+    
+    .delete-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 2rem;
+        text-align: center;
+        border: 1px solid var(--border);
+    }
+    
+    .delete-icon {
+        width: 70px;
+        height: 70px;
+        background: rgba(239, 68, 68, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        color: var(--danger);
+        font-size: 2rem;
+    }
+    
+    .delete-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .delete-message {
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+    }
+    
+    .prescription-info {
+        background: var(--bg-main);
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        text-align: left;
+    }
+    
+    .delete-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+    
+    .btn-delete {
+        background: var(--danger);
+        color: white;
+        padding: 0.6rem 1.5rem;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-cancel {
+        background: var(--hover-bg);
+        color: var(--text-secondary);
+        padding: 0.6rem 1.5rem;
+        border-radius: 10px;
+        text-decoration: none;
+    }
+</style>
+{% endblock %} {% block content %}
+<div class="delete-container">
+    <div class="delete-card">
+        <div class="delete-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h3 class="delete-title">Delete Prescription</h3>
+        <p class="delete-message">Are you sure you want to delete this prescription?</p>
+
+        <div class="prescription-info">
+            <p><strong>Patient:</strong> {{ prescription.patient.full_name }}</p>
+            <p><strong>Date:</strong> {{ prescription.created_at|date:"M d, Y" }}</p>
+            <p><strong>Diagnosis:</strong> {{ prescription.diagnosis|truncatechars:50 }}</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="delete-actions">
+                <button type="submit" class="btn-delete">Yes, Delete</button>
+                <a href="{% url 'doctor:prescription_detail' prescription.id %}" class="btn-cancel">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

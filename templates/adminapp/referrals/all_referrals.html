@@ -1,0 +1,295 @@
+{% extends 'adminapp/dashboard/base.html' %} {% load static %} {% block title %}All Referrals | Admin Dashboard{% endblock %} {% block page_title %}Referral Management{% endblock %} {% block extra_css %}
+<style>
+    .stats-row {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .stat-card {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 1rem;
+        flex: 1;
+        min-width: 120px;
+        text-align: center;
+        border: 1px solid var(--border);
+    }
+    
+    .stat-number {
+        font-size: 1.8rem;
+        font-weight: 700;
+    }
+    
+    .stat-label {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+    }
+    
+    .stat-pending {
+        border-top: 3px solid #F59E0B;
+    }
+    
+    .stat-approved {
+        border-top: 3px solid #10B981;
+    }
+    
+    .stat-rejected {
+        border-top: 3px solid #EF4444;
+    }
+    
+    .stat-active {
+        border-top: 3px solid #3B82F6;
+    }
+    
+    .stat-completed {
+        border-top: 3px solid #059669;
+    }
+    
+    .filter-bar {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border);
+    }
+    
+    .tab-buttons {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .tab-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        background: var(--hover-bg);
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 0.85rem;
+    }
+    
+    .tab-btn.active {
+        background: var(--primary);
+        color: white;
+    }
+    
+    .tab-btn .count {
+        background: rgba(0, 0, 0, 0.1);
+        padding: 0.1rem 0.4rem;
+        border-radius: 10px;
+        margin-left: 0.3rem;
+    }
+    
+    .referrals-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--bg-card);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .referrals-table th {
+        padding: 0.75rem 1rem;
+        text-align: left;
+        background: var(--bg-main);
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .referrals-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.8rem;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.2rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+    
+    .status-pending_admin {
+        background: #FEF3C7;
+        color: #D97706;
+    }
+    
+    .status-approved {
+        background: #D1FAE5;
+        color: #059669;
+    }
+    
+    .status-rejected {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+    
+    .status-accepted {
+        background: #DBEAFE;
+        color: #2563EB;
+    }
+    
+    .status-in_progress {
+        background: #E0E7FF;
+        color: #4338CA;
+    }
+    
+    .status-completed {
+        background: #D1FAE5;
+        color: #059669;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .btn-review {
+        background: var(--info);
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 0.7rem;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+    }
+</style>
+{% endblock %} {% block content %}
+<!-- Statistics Cards -->
+<div class="stats-row">
+    <div class="stat-card stat-pending">
+        <div class="stat-number">{{ pending_count }}</div>
+        <div class="stat-label">Pending Admin</div>
+    </div>
+    <div class="stat-card stat-approved">
+        <div class="stat-number">{{ approved_count }}</div>
+        <div class="stat-label">Approved</div>
+    </div>
+    <div class="stat-card stat-rejected">
+        <div class="stat-number">{{ rejected_count }}</div>
+        <div class="stat-label">Rejected</div>
+    </div>
+    <div class="stat-card stat-active">
+        <div class="stat-number">{{ active_count }}</div>
+        <div class="stat-label">In Progress</div>
+    </div>
+    <div class="stat-card stat-completed">
+        <div class="stat-number">{{ completed_count }}</div>
+        <div class="stat-label">Completed</div>
+    </div>
+</div>
+
+<!-- Tab Navigation -->
+<div class="tab-buttons">
+    <a href="?status=" class="tab-btn {% if not status_filter %}active{% endif %}">
+        All <span class="count">({{ page_obj.paginator.count }})</span>
+    </a>
+    <a href="?status=pending_admin" class="tab-btn {% if status_filter == 'pending_admin' %}active{% endif %}">
+        Pending <span class="count">{{ pending_count }}</span>
+    </a>
+    <a href="?status=approved" class="tab-btn {% if status_filter == 'approved' %}active{% endif %}">
+        Approved <span class="count">{{ approved_count }}</span>
+    </a>
+    <a href="?status=rejected" class="tab-btn {% if status_filter == 'rejected' %}active{% endif %}">
+        Rejected <span class="count">{{ rejected_count }}</span>
+    </a>
+    <a href="?status=accepted" class="tab-btn {% if status_filter == 'accepted' %}active{% endif %}">
+        Accepted <span class="count">{{ active_count }}</span>
+    </a>
+    <a href="?status=completed" class="tab-btn {% if status_filter == 'completed' %}active{% endif %}">
+        Completed <span class="count">{{ completed_count }}</span>
+    </a>
+</div>
+
+<!-- Filter Bar -->
+<div class="filter-bar">
+    <form method="get" class="filter-form">
+        <input type="hidden" name="status" value="{{ status_filter }}">
+        <div class="filter-group">
+            <input type="text" name="search" placeholder="Search by code, patient..." value="{{ search }}" style="width: 300px; padding: 0.5rem;">
+        </div>
+        <button type="submit" class="btn-filter btn-filter-primary">Search</button>
+        <a href="?status={{ status_filter }}" class="btn-filter btn-filter-secondary">Reset</a>
+    </form>
+</div>
+
+<!-- Referrals Table -->
+<table class="referrals-table">
+    <thead>
+        <tr>
+            <th>Code</th>
+            <th>Patient</th>
+            <th>CHW</th>
+            <th>Urgency</th>
+            <th>Specialist</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for referral in page_obj %}
+        <tr>
+            <td>{{ referral.referral_code }}</td>
+            <td>
+                <strong>{{ referral.patient.full_name }}</strong><br>
+                <small>{{ referral.patient.patient_id }}</small>
+            </td>
+            <td>{{ referral.chw.get_full_name|default:referral.chw.username }}</td>
+            <td>{{ referral.get_urgency_display }}</td>
+            <td>{{ referral.get_specialist_display }}</td>
+            <td>
+                <span class="status-badge status-{{ referral.status }}">
+                    {{ referral.get_status_display }}
+                </span>
+            </td>
+            <td>{{ referral.created_at|date:"M d, Y" }}</td>
+            <td>
+                <div class="action-buttons">
+                    <a href="{% url 'adminapp:admin_review_referral' referral.id %}" class="btn-review">
+                        <i class="fas fa-eye"></i> Review
+                    </a>
+                </div>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="8" style="text-align: center; padding: 2rem;">
+                <i class="fas fa-exchange-alt" style="font-size: 2rem; color: var(--text-muted);"></i>
+                <p>No referrals found</p>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    </td>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+            <i class="fas fa-chevron-left"></i> Prev
+        </a>
+        {% endif %} {% for num in page_obj.paginator.page_range %} {% if page_obj.number == num %}
+        <span class="current">{{ num }}</span> {% elif num > page_obj.number|add:'-3' and num
+        < page_obj.number|add: '3' %} <a href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+            {{ num }}
+            </a>
+            {% endif %} {% endfor %} {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+            Next <i class="fas fa-chevron-right"></i>
+        </a> {% endif %}
+    </div>
+    {% endif %} {% endblock %}

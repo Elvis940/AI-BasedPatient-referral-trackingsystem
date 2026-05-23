@@ -1,0 +1,424 @@
+{% extends 'adminapp/dashboard/base.html' %} {% load static %} {% block title %}User Details | J.J. Dossen{% endblock %} {% block page_title %}User Details{% endblock %} {% block extra_css %}
+<style>
+    .detail-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .detail-header {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border);
+        flex-wrap: wrap;
+    }
+    
+    .detail-avatar {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 600;
+        color: white;
+    }
+    
+    .detail-info h2 {
+        margin: 0 0 0.25rem 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+    
+    .detail-info p {
+        color: var(--text-secondary);
+        margin: 0;
+        font-size: 0.85rem;
+    }
+    
+    .badge-large {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .badge-doctor {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10B981;
+    }
+    
+    .badge-chw {
+        background: rgba(245, 158, 11, 0.1);
+        color: #F59E0B;
+    }
+    
+    .badge-active {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10B981;
+    }
+    
+    .badge-pending {
+        background: rgba(245, 158, 11, 0.1);
+        color: #F59E0B;
+    }
+    
+    .badge-inactive {
+        background: rgba(239, 68, 68, 0.1);
+        color: #EF4444;
+    }
+    
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+        padding: 0.75rem;
+        background: var(--bg-main);
+        border-radius: 12px;
+    }
+    
+    .detail-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .detail-value {
+        font-size: 0.9rem;
+        color: var(--text-primary);
+        font-weight: 500;
+        word-break: break-word;
+    }
+    
+    .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-primary);
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 0.5rem;
+    }
+    
+    .permissions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 0.75rem;
+    }
+    
+    .permission-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.6rem 0.75rem;
+        background: var(--bg-main);
+        border-radius: 10px;
+        font-size: 0.8rem;
+    }
+    
+    .permission-item i {
+        width: 20px;
+        font-size: 0.9rem;
+    }
+    
+    .permission-item .allowed {
+        color: var(--success);
+    }
+    
+    .permission-item .denied {
+        color: var(--danger);
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 1rem;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        padding: 0.6rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 500;
+        font-size: 0.85rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+    }
+    
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+        border: none;
+    }
+    
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background: var(--hover-bg);
+        color: var(--text-secondary);
+        border: 1px solid var(--border);
+    }
+    
+    .btn-secondary:hover {
+        background: var(--border);
+        color: var(--text-primary);
+    }
+    
+    .info-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.25rem;
+    }
+    
+    .info-tag {
+        background: var(--bg-card);
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        border: 1px solid var(--border);
+    }
+    
+    @media (max-width: 768px) {
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+        .detail-header {
+            flex-direction: column;
+            text-align: center;
+        }
+        .action-buttons {
+            flex-direction: column;
+        }
+        .btn-primary,
+        .btn-secondary {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %} {% block content %}
+<!-- Main Profile Card -->
+<div class="detail-card">
+    <div class="detail-header">
+        <div class="detail-avatar">
+            {{ user_obj.first_name|first|default:user_obj.username|first|upper }}
+        </div>
+        <div class="detail-info">
+            <h2>{{ user_obj.get_full_name|default:user_obj.username }}</h2>
+            <p>@{{ user_obj.username }}</p>
+            <div style="display: flex; gap: 0.75rem; margin-top: 0.75rem; flex-wrap: wrap;">
+                <span class="badge-large {% if user_obj.profile.user_type == 'doctor' %}badge-doctor{% else %}badge-chw{% endif %}">
+                    <i class="fas {% if user_obj.profile.user_type == 'doctor' %}fa-user-md{% else %}fa-hands-helping{% endif %}"></i>
+                    {{ user_obj.profile.get_user_type_display }}
+                </span>
+                <span class="badge-large 
+                    {% if user_obj.profile.status == 'active' %}badge-active
+                    {% elif user_obj.profile.status == 'pending' %}badge-pending
+                    {% else %}badge-inactive{% endif %}">
+                    <i class="fas 
+                        {% if user_obj.profile.status == 'active' %}fa-check-circle
+                        {% elif user_obj.profile.status == 'pending' %}fa-clock
+                        {% else %}fa-ban{% endif %}"></i>
+                    {{ user_obj.profile.get_status_display }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="detail-grid">
+        <!-- Basic Information -->
+        <div class="detail-item">
+            <span class="detail-label">User ID</span>
+            <span class="detail-value">
+                {% if user_obj.profile.doctor_id %}
+                    Doctor ID: {{ user_obj.profile.doctor_id }}
+                {% elif user_obj.profile.chw_id %}
+                    CHW ID: {{ user_obj.profile.chw_id }}
+                {% else %}
+                    Not assigned
+                {% endif %}
+            </span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Email Address</span>
+            <span class="detail-value">{{ user_obj.email|default:"Not provided" }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Phone Number</span>
+            <span class="detail-value">{{ user_obj.profile.phone_number|default:"Not provided" }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Gender</span>
+            <span class="detail-value">{{ user_obj.profile.get_gender_display|default:"Not specified" }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Home Address</span>
+            <span class="detail-value">{{ user_obj.profile.home_address|default:"Not provided" }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Hospital</span>
+            <span class="detail-value">{{ user_obj.profile.get_hospital_name_display }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Hospital ID</span>
+            <span class="detail-value">{{ user_obj.profile.hospital_id|default:"Not assigned" }}</span>
+        </div>
+    </div>
+</div>
+
+<!-- Doctor Specific Information (Only for Doctors) -->
+{% if user_obj.profile.user_type == 'doctor' %}
+<div class="detail-card">
+    <div class="section-title">
+        <i class="fas fa-stethoscope"></i> Doctor Professional Information
+    </div>
+    <div class="detail-grid">
+        <div class="detail-item">
+            <span class="detail-label">Department</span>
+            <span class="detail-value">{{ user_obj.profile.department|default:"Not specified" }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Specialization</span>
+            <span class="detail-value">
+                <i class="fas fa-stethoscope"></i> {{ user_obj.profile.full_specialization }}
+            </span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">License Number</span>
+            <span class="detail-value">{{ user_obj.profile.license_number|default:"Not provided" }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Years of Experience</span>
+            <span class="detail-value">{{ user_obj.profile.years_of_experience|default:"0" }} years</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Availability Status</span>
+            <span class="detail-value">
+                <span class="badge-large {% if user_obj.profile.availability_status == 'available' %}badge-active{% else %}badge-pending{% endif %}">
+                    {{ user_obj.profile.get_availability_status_display }}
+                </span>
+            </span>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- CHW Specific Information (Only for CHWs) -->
+{% if user_obj.profile.user_type == 'chw' %}
+<div class="detail-card">
+    <div class="section-title">
+        <i class="fas fa-hand-holding-heart"></i> CHW Information
+    </div>
+    <div class="detail-grid">
+        <div class="detail-item">
+            <span class="detail-label">Assigned Village</span>
+            <span class="detail-value">
+                <i class="fas fa-map-marker-alt"></i> {{ user_obj.profile.assigned_village|default:"Not assigned" }}
+            </span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">CHW ID</span>
+            <span class="detail-value">{{ user_obj.profile.chw_id|default:"Not assigned" }}</span>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- System Information -->
+<div class="detail-card">
+    <div class="section-title">
+        <i class="fas fa-clock"></i> System Information
+    </div>
+    <div class="detail-grid">
+        <div class="detail-item">
+            <span class="detail-label">Joined Date</span>
+            <span class="detail-value">{{ user_obj.date_joined|date:"F d, Y h:i A" }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Last Login</span>
+            <span class="detail-value">{{ user_obj.last_login|date:"F d, Y h:i A"|default:"Never" }}</span>
+        </div>
+        {% if user_obj.profile.activated_at %}
+        <div class="detail-item">
+            <span class="detail-label">Activated Date</span>
+            <span class="detail-value">{{ user_obj.profile.activated_at|date:"F d, Y h:i A" }}</span>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Permissions -->
+<div class="detail-card">
+    <div class="section-title">
+        <i class="fas fa-lock"></i> Permissions
+    </div>
+    <div class="permissions-grid">
+        <div class="permission-item">
+            <i class="fas fa-user-plus {% if user_obj.profile.can_create_patients %}allowed{% else %}denied{% endif %}"></i>
+            <span>Create Patients</span>
+        </div>
+        <div class="permission-item">
+            <i class="fas fa-edit {% if user_obj.profile.can_edit_patients %}allowed{% else %}denied{% endif %}"></i>
+            <span>Edit Patients</span>
+        </div>
+        <div class="permission-item">
+            <i class="fas fa-trash {% if user_obj.profile.can_delete_patients %}allowed{% else %}denied{% endif %}"></i>
+            <span>Delete Patients</span>
+        </div>
+        <div class="permission-item">
+            <i class="fas fa-exchange-alt {% if user_obj.profile.can_create_referrals %}allowed{% else %}denied{% endif %}"></i>
+            <span>Create Referrals</span>
+        </div>
+        <div class="permission-item">
+            <i class="fas fa-pen {% if user_obj.profile.can_edit_referrals %}allowed{% else %}denied{% endif %}"></i>
+            <span>Edit Referrals</span>
+        </div>
+        <div class="permission-item">
+            <i class="fas fa-chart-line {% if user_obj.profile.can_view_reports %}allowed{% else %}denied{% endif %}"></i>
+            <span>View Reports</span>
+        </div>
+        <div class="permission-item">
+            <i class="fas fa-users {% if user_obj.profile.can_manage_users %}allowed{% else %}denied{% endif %}"></i>
+            <span>Manage Users</span>
+        </div>
+    </div>
+</div>
+
+<div class="action-buttons">
+    <a href="{% url 'user_management:edit_user' user_obj.id %}" class="btn-primary">
+        <i class="fas fa-edit"></i> Edit User
+    </a>
+    <a href="{% url 'user_management:all_users' %}" class="btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Users
+    </a>
+
+</div>
+{% endblock %}

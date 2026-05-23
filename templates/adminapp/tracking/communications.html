@@ -1,0 +1,531 @@
+{% extends 'adminapp/dashboard/base.html' %} {% load static %} {% block title %}Doctor-CHW Communications | J.J. Dossen{% endblock %} {% block page_title %}Doctor-CHW Communications{% endblock %} {% block extra_css %}
+<style>
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 1rem;
+        text-align: center;
+        border: 1px solid var(--border);
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+    
+    .stat-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+    
+    .filter-bar {
+        background: var(--bg-card);
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    
+    .filter-bar select,
+    .filter-bar input {
+        padding: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg-main);
+        font-size: 0.85rem;
+    }
+    
+    .filter-bar button {
+        padding: 0.5rem 1rem;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+    
+    .communications-table {
+        width: 100%;
+        background: var(--bg-card);
+        border-radius: 12px;
+        overflow-x: auto;
+    }
+    
+    .communications-table th,
+    .communications-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.85rem;
+    }
+    
+    .communications-table th {
+        background: var(--bg-main);
+        font-weight: 600;
+    }
+    
+    .priority-high {
+        background: #FEE2E2;
+        color: #DC2626;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        display: inline-block;
+    }
+    
+    .priority-medium {
+        background: #FEF3C7;
+        color: #D97706;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        display: inline-block;
+    }
+    
+    .priority-low {
+        background: #DBEAFE;
+        color: #2563EB;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        display: inline-block;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+    
+    .status-read {
+        background: #D1FAE5;
+        color: #059669;
+    }
+    
+    .status-unread {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+    
+    .status-action_required {
+        background: #FEF3C7;
+        color: #D97706;
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.7rem;
+        border-radius: 6px;
+        text-decoration: none;
+        cursor: pointer;
+        border: none;
+        margin: 0.2rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .btn-view {
+        background: var(--info);
+        color: white;
+    }
+    
+    .btn-reminder {
+        background: var(--warning);
+        color: white;
+    }
+    
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal.active {
+        display: flex;
+    }
+    
+    .modal-content {
+        background: var(--bg-card);
+        border-radius: 16px;
+        max-width: 600px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    
+    .modal-header {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+    }
+    
+    .modal-footer {
+        padding: 1rem;
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }
+    
+    .detail-row {
+        margin-bottom: 0.75rem;
+    }
+    
+    .detail-label {
+        font-weight: 600;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+    }
+    
+    .detail-value {
+        font-size: 0.9rem;
+    }
+    
+    .message-box {
+        background: var(--bg-main);
+        padding: 0.75rem;
+        border-radius: 8px;
+        margin-top: 0.5rem;
+        white-space: pre-wrap;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    .pagination a,
+    .pagination span {
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+        text-decoration: none;
+        background: var(--bg-card);
+        color: var(--text-primary);
+    }
+    
+    .pagination .current {
+        background: var(--primary);
+        color: white;
+    }
+    
+    .export-btn {
+        background: var(--success);
+        color: white;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+</style>
+{% endblock %} {% block content %}
+<!-- Statistics Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ total_count }}</div>
+        <div class="stat-label">Total Communications</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ unread_count }}</div>
+        <div class="stat-label">Unread</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ action_required_count }}</div>
+        <div class="stat-label">Action Required</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ high_priority_count }}</div>
+        <div class="stat-label">High Priority</div>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="filter-bar">
+    <form method="get" style="display: flex; gap: 1rem; flex-wrap: wrap; width: 100%;">
+        <select name="priority">
+            <option value="">All Priorities</option>
+            <option value="high" {% if priority_filter == 'high' %}selected{% endif %}>High</option>
+            <option value="medium" {% if priority_filter == 'medium' %}selected{% endif %}>Medium</option>
+            <option value="low" {% if priority_filter == 'low' %}selected{% endif %}>Low</option>
+        </select>
+
+        <select name="type">
+            <option value="">All Types</option>
+            <option value="missed_appointment" {% if type_filter == 'missed_appointment' %}selected{% endif %}>Missed Appointment</option>
+            <option value="treatment_update" {% if type_filter == 'treatment_update' %}selected{% endif %}>Treatment Update</option>
+            <option value="medication_issue" {% if type_filter == 'medication_issue' %}selected{% endif %}>Medication Issue</option>
+            <option value="follow_up_needed" {% if type_filter == 'follow_up_needed' %}selected{% endif %}>Follow-up Needed</option>
+            <option value="emergency_alert" {% if type_filter == 'emergency_alert' %}selected{% endif %}>Emergency Alert</option>
+        </select>
+
+        <select name="status">
+            <option value="">All Status</option>
+            <option value="read" {% if status_filter == 'read' %}selected{% endif %}>Read</option>
+            <option value="unread" {% if status_filter == 'unread' %}selected{% endif %}>Unread</option>
+            <option value="action_required" {% if status_filter == 'action_required' %}selected{% endif %}>Action Required</option>
+        </select>
+
+        <input type="text" name="search" placeholder="Search by patient, doctor, or CHW..." value="{{ search }}" style="flex: 1; min-width: 200px;">
+
+        <button type="submit"><i class="fas fa-filter"></i> Filter</button>
+        <a href="{% url 'adminapp:all_communications' %}" style="padding: 0.5rem 1rem; background: var(--hover-bg); border-radius: 8px; text-decoration: none; color: var(--text-primary);">Clear</a>
+    </form>
+</div>
+
+<!-- Export Button -->
+<div style="margin-bottom: 1rem; text-align: right;">
+    <button onclick="exportToCSV()" class="export-btn">
+        <i class="fas fa-download"></i> Export to CSV
+    </button>
+</div>
+
+<!-- Communications Table -->
+<div class="communications-table">
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Doctor</th>
+                <th>CHW</th>
+                <th>Patient</th>
+                <th>Type</th>
+                <th>Priority</th>
+                <th>Subject</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for comm in page_obj %}
+            <tr>
+                <td style="white-space: nowrap;">{{ comm.created_at|date:"M d, Y H:i" }}</td>
+                <td>Dr. {{ comm.from_user.get_full_name|default:comm.from_user.username }}</td>
+                <td>{{ comm.to_user.get_full_name|default:comm.to_user.username }}</td>
+                <td>
+                    <a href="{% url 'adminapp:admin_patient_tracking' comm.referral.patient.id %}" style="color: var(--primary); text-decoration: none;">
+                        {{ comm.referral.patient.full_name }}
+                    </a>
+                </td>
+                <td>{{ comm.get_communication_type_display }}</td>
+                <td>
+                    <span class="priority-{{ comm.priority }}">{{ comm.get_priority_display }}</span>
+                </td>
+                <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">{{ comm.subject|truncatechars:30 }}</td>
+                <td>
+                    {% if not comm.is_read %}
+                    <span class="status-badge status-unread">Unread</span> {% elif comm.requires_action and not comm.action_taken %}
+                    <span class="status-badge status-action_required">Action Required</span> {% else %}
+                    <span class="status-badge status-read">Read</span> {% endif %}
+                </td>
+                <td>
+                    <button onclick="viewCommunication({{ comm.id }})" class="btn-sm btn-view">
+                        <i class="fas fa-eye"></i> View
+                    </button> {% if comm.requires_action and not comm.action_taken %}
+                    <button onclick="sendReminder({{ comm.id }})" class="btn-sm btn-reminder">
+                        <i class="fas fa-bell"></i> Remind
+                    </button> {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="9" style="text-align: center; padding: 2rem;">
+                    <i class="fas fa-inbox" style="font-size: 3rem; color: var(--text-muted);"></i>
+                    <p>No communications found.</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<div class="pagination">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% if priority_filter %}&priority={{ priority_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search %}&search={{ search }}{% endif %}">Previous</a>    {% endif %}
+
+    <span class="current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span> {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if priority_filter %}&priority={{ priority_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search %}&search={{ search }}{% endif %}">Next</a>    {% endif %}
+</div>
+{% endif %}
+
+<!-- View Communication Modal -->
+<div id="viewModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-envelope"></i> Communication Details</h3>
+            <button onclick="closeViewModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        <div class="modal-body" id="modalBody">
+            <!-- Content loaded via JavaScript -->
+        </div>
+        <div class="modal-footer">
+            <button onclick="closeViewModal()" class="btn-sm" style="background: var(--hover-bg);">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function viewCommunication(commId) {
+        // Use the correct URL pattern - without extra /admin/ prefix
+        const url = `/communications/${commId}/detail/`;
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                    const modalBody = document.getElementById('modalBody');
+                    modalBody.innerHTML = `
+                <div class="detail-row">
+                    <div class="detail-label">From (Doctor)</div>
+                    <div class="detail-value">Dr. ${escapeHtml(data.doctor_name)}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">To (CHW)</div>
+                    <div class="detail-value">${escapeHtml(data.chw_name)}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Patient</div>
+                    <div class="detail-value">${escapeHtml(data.patient_name)} (ID: ${escapeHtml(data.patient_id)})</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Subject</div>
+                    <div class="detail-value">${escapeHtml(data.subject)}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Message</div>
+                    <div class="message-box">${escapeHtml(data.message).replace(/\n/g, '<br>')}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Priority</div>
+                    <div class="detail-value">${escapeHtml(data.priority_display)}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Type</div>
+                    <div class="detail-value">${escapeHtml(data.type_display)}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Sent</div>
+                    <div class="detail-value">${escapeHtml(data.created_at)}</div>
+                </div>
+                ${data.read_at ? `<div class="detail-row">
+                    <div class="detail-label">Read by CHW</div>
+                    <div class="detail-value">${escapeHtml(data.read_at)}</div>
+                </div>` : ''}
+                ${data.action_taken ? `<div class="detail-row">
+                    <div class="detail-label">Action Taken</div>
+                    <div class="detail-value">Yes</div>
+                </div>` : '<div class="detail-row"><div class="detail-label">Action Required</div><div class="detail-value">Pending</div></div>'}
+            `;
+            document.getElementById('viewModal').classList.add('active');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Could not load communication details. Please check that the communication exists.');
+        });
+}
+
+function closeViewModal() {
+    document.getElementById('viewModal').classList.remove('active');
+}
+
+function sendReminder(commId) {
+    if (confirm('Send reminder to CHW about this pending action?')) {
+        const url = `/communications/${commId}/send-reminder/`;
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken(),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Reminder sent to CHW successfully!');
+            } else {
+                alert('Failed to send reminder.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error sending reminder.');
+        });
+    }
+}
+
+function exportToCSV() {
+    window.location.href = "/communications/export/";
+}
+
+function getCSRFToken() {
+    let csrfToken = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith('csrftoken=')) {
+                csrfToken = cookie.substring('csrftoken='.length, cookie.length);
+                break;
+            }
+        }
+    }
+    return csrfToken;
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('viewModal');
+    if (event.target === modal) {
+        closeViewModal();
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,328 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J.J. Dossen - AI Patient Tracking System</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- AOS -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-heartbeat"></i> J.J. Dossen
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#home">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#about">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#features">Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#gallery">Gallery</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn-login" href="{% url 'adminapp:login' %}">
+                            <i class="fas fa-lock"></i> Login
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="container">
+            <div class="row min-vh-100 align-items-center">
+                <div class="col-lg-7" data-aos="fade-right">
+                    <h1>AI-Powered Patient Tracking & Referral System</h1>
+                    <p>Revolutionizing healthcare delivery at J.J. Dossen Memorial Hospital with intelligent patient tracking and seamless referral management.</p>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="btn-primary-custom">
+                            <i class="fas fa-arrow-right"></i> Admin Portal
+                        </a>
+                        <a href="#features" class="btn-outline-custom">
+                            <i class="fas fa-play"></i> Explore Features
+                        </a>
+                    </div>
+                    <div class="hero-stats mt-5">
+                        <div class="stat-item">
+                            <div class="stat-number">5,000+</div>
+                            <div class="stat-label">Patients Served</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">98%</div>
+                            <div class="stat-label">Success Rate</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">50+</div>
+                            <div class="stat-label">CHWs Active</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5" data-aos="fade-left">
+                    <img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=500&h=500&fit=crop" alt="Healthcare Professional" class="img-fluid rounded-4 shadow-lg">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6" data-aos="fade-right">
+                    <div class="about-image">
+                        <img src="https://images.unsplash.com/photo-1584515933487-779824d29309?w=600&h=400&fit=crop" alt="J.J. Dossen Hospital">
+                    </div>
+                </div>
+                <div class="col-lg-6" data-aos="fade-left">
+                    <div class="about-content">
+                        <h2>About J.J. Dossen Memorial Hospital</h2>
+                        <p>J.J. Dossen Memorial Hospital is a premier healthcare institution committed to providing exceptional medical care to our community. With our new AI-based digital referral and patient tracking system, we're transforming how patients
+                            navigate through our healthcare network.</p>
+                        <p>Our innovative system ensures that every patient receives timely, appropriate care by eliminating lost referrals, reducing wait times, and providing real-time tracking throughout their healthcare journey.</p>
+                        <ul class="about-list">
+                            <li><i class="fas fa-check-circle"></i> 24/7 Emergency Services</li>
+                            <li><i class="fas fa-check-circle"></i> Specialized Medical Departments</li>
+                            <li><i class="fas fa-check-circle"></i> Community Outreach Programs</li>
+                            <li><i class="fas fa-check-circle"></i> Modern Medical Equipment</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2>Smart Features for Better Healthcare</h2>
+                <p>Leveraging artificial intelligence to improve patient outcomes</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3>AI-Powered Referrals</h3>
+                    <p>Intelligent referral suggestions based on patient symptoms, location, and historical success rates.</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-icon">
+                        <i class="fas fa-map-marked-alt"></i>
+                    </div>
+                    <h3>Real-Time Tracking</h3>
+                    <p>Track patients throughout their healthcare journey with live updates and status notifications.</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+                    <div class="feature-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <h3>Smart Alerts</h3>
+                    <p>Automatic alerts for lost patients, missed appointments, and delayed referrals.</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>Analytics Dashboard</h3>
+                    <p>Comprehensive analytics and reports to monitor system performance and patient outcomes.</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="500">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3>Mobile Access</h3>
+                    <p>Community health workers can register and track patients directly from their mobile devices.</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="600">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Secure & Private</h3>
+                    <p>Enterprise-grade security ensuring patient data confidentiality and compliance.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gallery Section -->
+    <section id="gallery" class="gallery">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2>Healthcare in Action</h2>
+                <p>See how we're making a difference in our community</p>
+            </div>
+            <div class="gallery-grid">
+                <div class="gallery-card" data-aos="fade-up" data-aos-delay="100">
+                    <img src="https://images.unsplash.com/photo-1584515933487-779824d29309?w=600&h=400&fit=crop" alt="Children receiving care">
+                    <div class="gallery-overlay">
+                        <h4>Pediatric Care</h4>
+                        <p>Providing compassionate care to our youngest patients</p>
+                    </div>
+                </div>
+                <div class="gallery-card" data-aos="fade-up" data-aos-delay="200">
+                    <img src="https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=600&h=400&fit=crop" alt="Medical consultation">
+                    <div class="gallery-overlay">
+                        <h4>Expert Consultation</h4>
+                        <p>Specialized medical consultations</p>
+                    </div>
+                </div>
+                <div class="gallery-card" data-aos="fade-up" data-aos-delay="300">
+                    <img src="https://images.unsplash.com/photo-1550831107-1553da8c8464?w=600&h=400&fit=crop" alt="Community health">
+                    <div class="gallery-overlay">
+                        <h4>Community Outreach</h4>
+                        <p>Bringing healthcare to every village</p>
+                    </div>
+                </div>
+                <div class="gallery-card" data-aos="fade-up" data-aos-delay="400">
+                    <img src="https://images.unsplash.com/photo-1516575334481-f85287c2c82d?w=600&h=400&fit=crop" alt="Modern facility">
+                    <div class="gallery-overlay">
+                        <h4>Modern Facilities</h4>
+                        <p>State-of-the-art medical equipment</p>
+                    </div>
+                </div>
+                <div class="gallery-card" data-aos="fade-up" data-aos-delay="500">
+                    <img src="https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?w=600&h=400&fit=crop" alt="Nurse with child">
+                    <div class="gallery-overlay">
+                        <h4>Compassionate Care</h4>
+                        <p>Dedicated nursing staff</p>
+                    </div>
+                </div>
+                <div class="gallery-card" data-aos="fade-up" data-aos-delay="600">
+                    <img src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&h=400&fit=crop" alt="Medical team">
+                    <div class="gallery-overlay">
+                        <h4>Expert Team</h4>
+                        <p>Collaborative healthcare approach</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <div class="row">
+                <div class="col-12" data-aos="zoom-in">
+                    <h2>Ready to Transform Healthcare Delivery?</h2>
+                    <p>Join us in revolutionizing patient care with AI-powered tracking</p>
+                    <a href="{% url 'adminapp:login' %}" class="btn-cta">
+                    Access  Portal <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4">
+                    <h4>J.J. Dossen</h4>
+                    <p>AI-powered digital referral and patient tracking system ensuring quality healthcare delivery across our network.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2">
+                    <h4>Quick Links</h4>
+                    <ul class="footer-links">
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#gallery">Gallery</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3">
+                    <h4>Contact</h4>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-map-marker-alt me-2"></i> J.J. Dossen Memorial Hospital, Liberia</li>
+                        <li><i class="fas fa-phone me-2"></i> +231 123 456 789</li>
+                        <li><i class="fas fa-envelope me-2"></i> info@jjdossen.org</li>
+                    </ul>
+                </div>
+                <div class="col-lg-3">
+                    <h4>Working Hours</h4>
+                    <ul class="footer-links">
+                        <li>Monday - Friday: 24/7</li>
+                        <li>Saturday: 24/7</li>
+                        <li>Sunday: 24/7</li>
+                        <li>Emergency: Always Open</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 J.J. Dossen Patient Tracking System. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        // Initialize AOS
+        AOS.init({
+            duration: 1000,
+            once: true,
+            offset: 100
+        });
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

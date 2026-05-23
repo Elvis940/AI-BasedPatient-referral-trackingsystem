@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Account Activated - J.J. Dossen Patient Tracking System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #10B981 0%, #34D399 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .header p {
+            margin: 10px 0 0;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px;
+        }
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .success-box i {
+            font-size: 48px;
+            color: #28a745;
+        }
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #10B981 0%, #34D399 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            margin: 20px 0;
+            font-weight: 600;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #777;
+            border-top: 1px solid #eee;
+            background: #f8f9fa;
+        }
+        .credentials {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>✅ Account Activated Successfully!</h2>
+            <p>Welcome to J.J. Dossen Patient Tracking System</p>
+        </div>
+        <div class="content">
+            <div class="success-box">
+                <div style="font-size: 48px;">🎉</div>
+                <p style="font-size: 18px; margin-top: 10px;"><strong>Your account is now active!</strong></p>
+            </div>
+            
+            <p>Dear <strong>{{ user.get_full_name|default:user.username }}</strong>,</p>
+            
+            <p>Great news! Your J.J. Dossen Patient Tracking System account has been activated.</p>
+            
+            {% if activated_by %}
+            <div class="info-box">
+                <strong>👤 Activated by:</strong> {{ activated_by.get_full_name|default:activated_by.username }}
+            </div>
+            {% else %}
+            <div class="info-box">
+                <strong>🤖 Your account was automatically activated</strong> after 2 minutes.
+            </div>
+            {% endif %}
+            
+            <p>You can now login to the system using your credentials:</p>
+            
+            <div class="credentials">
+                <p><strong>Username:</strong> {{ user.username }}</p>
+                {% if profile.chw_id %}
+                <p><strong>CHW ID:</strong> {{ profile.chw_id }}</p>
+                {% endif %}
+                {% if profile.doctor_id %}
+                <p><strong>Doctor ID:</strong> {{ profile.doctor_id }}</p>
+                {% endif %}
+            </div>
+            
+            <div style="text-align: center;">
+                <a href="{{ login_url }}" class="button">🚀 Login to Dashboard</a>
+            </div>
+            
+            <p>If you have any questions or need assistance, please contact our support team.</p>
+            
+            <p>Best regards,<br>
+            <strong>J.J. Dossen Hospital IT Team</strong></p>
+        </div>
+        <div class="footer">
+            <p>This is an automated message, please do not reply to this email.</p>
+            <p>&copy; {% now "Y" %} J.J. Dossen Memorial Hospital. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

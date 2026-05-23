@@ -1,0 +1,581 @@
+{% extends 'doctor/dashboard/base.html' %} {% load static %} {% block title %}Doctor Dashboard | J.J. Dossen{% endblock %} {% block page_title %}Dashboard{% endblock %} {% block extra_css %}
+<style>
+    /* Welcome Banner */
+    
+    .welcome-banner {
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .welcome-banner::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+        background-size: 30px 30px;
+        animation: moveBg 20s linear infinite;
+    }
+    
+    .welcome-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .welcome-banner h2 {
+        font-size: 1.3rem;
+        margin-bottom: 0.3rem;
+    }
+    
+    .welcome-banner p {
+        opacity: 0.9;
+        font-size: 0.85rem;
+    }
+    /* Stats Grid */
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 1rem;
+        border: 1px solid var(--border);
+        transition: all 0.3s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 0.75rem;
+    }
+    
+    .stat-icon.primary {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--primary);
+    }
+    
+    .stat-icon.danger {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+    
+    .stat-icon.warning {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+    }
+    
+    .stat-icon.info {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--info);
+    }
+    
+    .stat-number {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1;
+    }
+    
+    .stat-label {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        margin-top: 0.25rem;
+    }
+    /* Cards */
+    
+    .card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+    
+    .card-header {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+        font-weight: 600;
+        font-size: 0.9rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .card-body {
+        padding: 1rem;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    /* Referral Lists */
+    
+    .referral-list {
+        list-style: none;
+    }
+    
+    .referral-item {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .referral-item:last-child {
+        border-bottom: none;
+    }
+    
+    .referral-item:hover {
+        background: var(--hover-bg);
+        padding-left: 0.5rem;
+    }
+    
+    .referral-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.25rem;
+    }
+    
+    .referral-patient {
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .referral-code {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        font-family: monospace;
+    }
+    
+    .referral-details {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    /* Badges */
+    
+    .badge {
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.65rem;
+        font-weight: 500;
+    }
+    
+    .badge-emergency {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+    
+    .badge-urgent {
+        background: #FEF3C7;
+        color: #D97706;
+    }
+    
+    .badge-pending {
+        background: #FEF3C7;
+        color: var(--warning);
+    }
+    
+    .badge-accepted {
+        background: #DBEAFE;
+        color: #2563EB;
+    }
+    
+    .badge-in_progress {
+        background: #E0E7FF;
+        color: #4338CA;
+    }
+    
+    .badge-completed {
+        background: #D1FAE5;
+        color: #059669;
+    }
+    /* Empty State */
+    
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+    }
+    
+    .empty-state i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    /* Progress Bar */
+    
+    .progress-bar {
+        height: 6px;
+        background: var(--border);
+        border-radius: 3px;
+        overflow: hidden;
+        margin: 0.5rem 0;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: var(--primary);
+        border-radius: 3px;
+    }
+    /* Activity Timeline */
+    
+    .activity-list {
+        list-style: none;
+    }
+    
+    .activity-item {
+        display: flex;
+        gap: 1rem;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .activity-icon {
+        width: 32px;
+        height: 32px;
+        background: var(--bg-main);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .activity-detail {
+        flex: 1;
+    }
+    
+    .activity-text {
+        font-size: 0.85rem;
+    }
+    
+    .activity-time {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+    }
+    /* Grid */
+    
+    .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .btn-outline {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-outline:hover {
+        background: var(--hover-bg);
+    }
+    
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.8rem;
+        border: none;
+        cursor: pointer;
+    }
+    
+    @media (max-width: 768px) {
+        .grid-2 {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %} {% block content %}
+<!-- Welcome Banner -->
+<div class="welcome-banner">
+    <div class="welcome-content">
+        <h2>Welcome, Dr. {{ user.get_full_name|default:user.username }}! 👨‍⚕️</h2>
+        <p><i class="fas fa-stethoscope"></i> Specialization: <strong>{{ doctor_specialization }}</strong></p>
+        <p><i class="fas fa-calendar"></i> Today is {{ current_date|date:"l, F d, Y" }}</p>
+    </div>
+</div>
+
+<!-- Statistics Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon primary">
+            <i class="fas fa-exchange-alt"></i>
+        </div>
+        <div class="stat-number">{{ total_referrals }}</div>
+        <div class="stat-label">Total Referrals</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon danger">
+            <i class="fas fa-bell"></i>
+        </div>
+        <div class="stat-number">{{ pending_referrals }}</div>
+        <div class="stat-label">Pending</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon warning">
+            <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="stat-number">{{ in_progress_referrals }}</div>
+        <div class="stat-label">In Progress</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon info">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-number">{{ completed_referrals }}</div>
+        <div class="stat-label">Completed</div>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ emergency_referrals }}</div>
+        <div class="stat-label">Emergency Cases</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ urgent_referrals }}</div>
+        <div class="stat-label">Urgent Cases</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ total_patients }}</div>
+        <div class="stat-label">Unique Patients</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ completion_rate }}%</div>
+        <div class="stat-label">Completion Rate</div>
+    </div>
+</div>
+
+<!-- Progress Bar for Completion Rate -->
+<div class="card">
+    <div class="card-header">
+        <span><i class="fas fa-chart-simple"></i> Overall Progress</span>
+        <span>{{ completion_rate }}% Complete</span>
+    </div>
+    <div class="card-body">
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: {{ completion_rate }}%"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-top: 0.25rem;">
+            <span>{{ completed_referrals }} Completed</span>
+            <span>{{ pending_referrals }} Pending</span>
+            <span>{{ in_progress_referrals }} In Progress</span>
+        </div>
+    </div>
+</div>
+
+<!-- Two Column Layout for Referral Lists -->
+<div class="grid-2">
+    <!-- Emergency & Priority Referrals -->
+    <div class="card">
+        <div class="card-header">
+            <span><i class="fas fa-ambulance"></i> Emergency & Priority</span>
+            <span class="badge badge-emergency">{{ emergency_list|length }} Urgent</span>
+        </div>
+        <div class="card-body">
+            {% if emergency_list %}
+            <ul class="referral-list">
+                {% for referral in emergency_list %}
+                <li class="referral-item" onclick="window.location.href='{% url 'referrals:referral_detail' referral.id %}'">
+                    <div class="referral-header">
+                        <span class="referral-patient">{{ referral.patient_name }}</span>
+                        <span class="badge badge-emergency">Emergency</span>
+                    </div>
+                    <div class="referral-details">
+                        <span><i class="fas fa-id-card"></i> {{ referral.patient_id }}</span>
+                        <span><i class="fas fa-user"></i> {{ referral.patient_age }} yrs</span>
+                        <span><i class="fas fa-map-marker-alt"></i> {{ referral.patient_village }}</span>
+                    </div>
+                    <div class="referral-code">Code: {{ referral.referral_code }}</div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-check-circle"></i>
+                <p>No emergency cases</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Pending Referrals -->
+    <div class="card">
+        <div class="card-header">
+            <span><i class="fas fa-clock"></i> Pending Referrals</span>
+            <span class="badge badge-pending">{{ pending_list|length }}</span>
+        </div>
+        <div class="card-body">
+            {% if pending_list %}
+            <ul class="referral-list">
+                {% for referral in pending_list %}
+                <li class="referral-item" onclick="window.location.href='{% url 'referrals:referral_detail' referral.id %}'">
+                    <div class="referral-header">
+                        <span class="referral-patient">{{ referral.patient_name }}</span>
+                        <span class="badge badge-pending">Pending</span>
+                    </div>
+                    <div class="referral-details">
+                        <span><i class="fas fa-user-md"></i> Referred by: {{ referral.chw_name }}</span>
+                        <span><i class="fas fa-calendar"></i> {{ referral.created_at|date:"M d, Y" }}</span>
+                    </div>
+                    <div class="referral-code">Code: {{ referral.referral_code }}</div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-check-circle"></i>
+                <p>No pending referrals</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- In Progress Referrals -->
+<div class="card">
+    <div class="card-header">
+        <span><i class="fas fa-spinner"></i> In Progress</span>
+        <span class="badge badge-in_progress">{{ in_progress_list|length }}</span>
+    </div>
+    <div class="card-body">
+        {% if in_progress_list %}
+        <ul class="referral-list">
+            {% for referral in in_progress_list %}
+            <li class="referral-item" onclick="window.location.href='{% url 'referrals:referral_detail' referral.id %}'">
+                <div class="referral-header">
+                    <span class="referral-patient">{{ referral.patient_name }}</span>
+                    <span class="badge badge-in_progress">In Progress</span>
+                </div>
+                <div class="referral-details">
+                    <span><i class="fas fa-stethoscope"></i> {{ referral.specialist }}</span>
+                    <span><i class="fas fa-calendar"></i> Since {{ referral.created_at|date:"M d, Y" }}</span>
+                </div>
+                <div class="referral-code">Code: {{ referral.referral_code }}</div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-check-circle"></i>
+            <p>No active cases</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Recently Completed & Activity Timeline -->
+<div class="grid-2">
+    <!-- Recently Completed -->
+    <div class="card">
+        <div class="card-header">
+            <span><i class="fas fa-check-circle"></i> Recently Completed</span>
+            <span class="badge badge-completed">{{ completed_list|length }}</span>
+        </div>
+        <div class="card-body">
+            {% if completed_list %}
+            <ul class="referral-list">
+                {% for referral in completed_list %}
+                <li class="referral-item" onclick="window.location.href='{% url 'referrals:referral_detail' referral.id %}'">
+                    <div class="referral-header">
+                        <span class="referral-patient">{{ referral.patient_name }}</span>
+                        <span class="badge badge-completed">Completed</span>
+                    </div>
+                    <div class="referral-details">
+                        <span><i class="fas fa-calendar"></i> Completed: {{ referral.completed_at|date:"M d, Y" }}</span>
+                    </div>
+                    <div class="referral-code">Code: {{ referral.referral_code }}</div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-chart-line"></i>
+                <p>No completed cases yet</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Activity Timeline -->
+    <div class="card">
+        <div class="card-header">
+            <span><i class="fas fa-history"></i> Recent Activity</span>
+        </div>
+        <div class="card-body">
+            {% if activities %}
+            <ul class="activity-list">
+                {% for activity in activities %}
+                <li class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas 
+                                {% if activity.activity_type == 'created' %}fa-plus-circle
+                                {% elif activity.activity_type == 'accepted' %}fa-check-circle
+                                {% elif activity.activity_type == 'completed' %}fa-flag-checkered
+                                {% else %}fa-clock{% endif %}">
+                            </i>
+                    </div>
+                    <div class="activity-detail">
+                        <div class="activity-text">{{ activity.activity_display }} - {{ activity.patient_name }}</div>
+                        <div class="activity-time">
+                            {{ activity.timestamp|date:"M d, Y h:i A" }} by {{ activity.performed_by }}
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-clock"></i>
+                <p>No recent activity</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    // Update notification badge with pending count
+    const notificationBadge = document.getElementById('notificationBadge');
+    if (notificationBadge) {
+        notificationBadge.textContent = '{{ pending_referrals }}';
+    }
+
+    // Update sidebar badge
+    const pendingCountSpan = document.getElementById('pendingCount');
+    if (pendingCountSpan) {
+        pendingCountSpan.textContent = '{{ pending_referrals }}';
+    }
+</script>
+{% endblock %}

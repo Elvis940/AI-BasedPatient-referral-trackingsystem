@@ -1,0 +1,351 @@
+{% extends 'chw/dashboard/base.html' %} {% load static %} {% block title %}Edit Patient | J.J. Dossen{% endblock %} {% block page_title %}Edit Patient: {{ patient.full_name }}{% endblock %} {% block extra_css %}
+<style>
+    .form-container {
+        max-width: 100%;
+        margin: 0;
+    }
+    
+    .form-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+    
+    .form-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-card);
+    }
+    
+    .form-header h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+    }
+    
+    .form-body {
+        padding: 1.5rem;
+    }
+    
+    .form-section {
+        background: var(--bg-main);
+        border-radius: 16px;
+        padding: 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+    
+    .form-section h4 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-group label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-family: 'Inter', sans-serif;
+        background: var(--bg-card);
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.1);
+    }
+    
+    .required-field::after {
+        content: "*";
+        color: var(--danger);
+        margin-left: 3px;
+    }
+    
+    .form-hint {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+    }
+    
+    .age-display {
+        background: var(--bg-card);
+        padding: 0.6rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-size: 0.85rem;
+        color: var(--text-primary);
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        justify-content: flex-end;
+    }
+    
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+        padding: 0.6rem 1.8rem;
+        border-radius: 10px;
+        border: none;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    
+    .btn-secondary {
+        background: var(--hover-bg);
+        color: var(--text-secondary);
+        padding: 0.6rem 1.8rem;
+        border-radius: 10px;
+        text-decoration: none;
+        border: 1px solid var(--border);
+    }
+    
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+        .form-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %} {% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h3><i class="fas fa-edit"></i> Edit Patient: {{ patient.full_name }}</h3>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 5px;">Patient ID: {{ patient.patient_id }}</p>
+        </div>
+        <div class="form-body">
+            <form method="post" id="patientForm">
+                {% csrf_token %}
+
+                <!-- 1. Personal Information -->
+                <div class="form-section">
+                    <h4><i class="fas fa-user-circle"></i> 1. Personal Information</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>First Name</label> {{ form.first_name }}
+                        </div>
+                        <div class="form-group">
+                            <label>Last Name</label> {{ form.last_name }}
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Gender</label> {{ form.gender }}
+                        </div>
+                        <div class="form-group">
+                            <label>Date of Birth</label> {{ form.date_of_birth }}
+                        </div>
+                        <div class="form-group">
+                            <label>Age</label>
+                            <div class="age-display" id="ageDisplay">-</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Phone Number</label> {{ form.phone_number }}
+                            <div class="form-hint">Format: +231XXXXXXXXX</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label> {{ form.email }}
+                            <div class="form-hint">Used for communication and appointment reminders</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>National ID</label> {{ form.national_id }}
+                        </div>
+                        <div class="form-group">
+                            <label>Marital Status</label> {{ form.marital_status }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Address Information -->
+                <div class="form-section">
+                    <h4><i class="fas fa-map-marker-alt"></i> 2. Address Information</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Village</label> {{ form.village }}
+                        </div>
+                        <div class="form-group">
+                            <label>Cell</label> {{ form.cell }}
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Sector</label> {{ form.sector }}
+                        </div>
+                        <div class="form-group">
+                            <label>District</label> {{ form.district }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Landmark</label> {{ form.landmark }}
+                    </div>
+                </div>
+
+                <!-- 3. Emergency Contact -->
+                <div class="form-section">
+                    <h4><i class="fas fa-phone-alt"></i> 3. Emergency Contact</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Full Name</label> {{ form.emergency_name }}
+                        </div>
+                        <div class="form-group">
+                            <label>Relationship</label> {{ form.emergency_relationship }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label> {{ form.emergency_phone }}
+                        <div class="form-hint">Format: +231XXXXXXXXX</div>
+                    </div>
+                </div>
+
+                <!-- 4. Basic Health Information -->
+                <div class="form-section">
+                    <h4><i class="fas fa-heartbeat"></i> 4. Basic Health Information</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Weight (kg)</label> {{ form.weight_kg }}
+                        </div>
+                        <div class="form-group">
+                            <label>Height (cm)</label> {{ form.height_cm }}
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Blood Pressure</label>
+                            <div class="form-row" style="gap: 0.5rem;">
+                                {{ form.blood_pressure_systolic }}
+                                <span style="align-self: center;">/</span> {{ form.blood_pressure_diastolic }}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Temperature (°C)</label> {{ form.temperature_c }}
+                        </div>
+                        <div class="form-group">
+                            <label>Pulse Rate (bpm)</label> {{ form.pulse_rate }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Medical History -->
+                <div class="form-section">
+                    <h4><i class="fas fa-notes-medical"></i> 5. Medical History</h4>
+                    <div class="form-group">
+                        <label>Known Conditions</label> {{ form.known_conditions }}
+                    </div>
+                    <div class="form-group">
+                        <label>Current Medications</label> {{ form.current_medications }}
+                    </div>
+                    <div class="form-group">
+                        <label>Allergies</label> {{ form.allergies }}
+                    </div>
+                    <div class="form-group">
+                        <label>Past Surgeries</label> {{ form.past_surgeries }}
+                    </div>
+                </div>
+
+                <div class="form-section" id="pregnancySection" style="display: {% if patient.gender == 'F' %}block{% else %}none{% endif %};">
+                    <h4><i class="fas fa-baby-carriage"></i> 6. Special Conditions</h4>
+                    <div class="form-group">
+                        <label>Are you pregnant? (For females only)</label> {{ form.is_pregnant }}
+                        <div class="form-hint">This field only applies to female patients</div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i> Update Patient
+                    </button>
+                    <a href="{% url 'patients:view_patient' patient.id %}" class="btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-calculate age from date of birth
+    const dobInput = document.getElementById('{{ form.date_of_birth.id_for_label }}');
+    const ageDisplay = document.getElementById('ageDisplay');
+
+    function calculateAge() {
+        const dob = new Date(dobInput.value);
+        const today = new Date();
+
+        if (dob && !isNaN(dob)) {
+            let age = today.getFullYear() - dob.getFullYear();
+            const monthDiff = today.getMonth() - dob.getMonth();
+
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+
+            ageDisplay.textContent = age + ' years';
+        } else {
+            ageDisplay.textContent = '-';
+        }
+    }
+
+    if (dobInput) {
+        calculateAge();
+        dobInput.addEventListener('change', calculateAge);
+    }
+
+    const genderSelect = document.getElementById('{{ form.gender.id_for_label }}');
+    const pregnancySection = document.getElementById('pregnancySection');
+    const pregnancySelect = document.getElementById('{{ form.is_pregnant.id_for_label }}');
+
+    function togglePregnancySection() {
+        if (genderSelect && genderSelect.value === 'F') {
+            pregnancySection.style.display = 'block';
+        } else {
+            pregnancySection.style.display = 'none';
+            if (pregnancySelect) {
+                pregnancySelect.value = 'na';
+            }
+        }
+    }
+
+    if (genderSelect) {
+        genderSelect.addEventListener('change', togglePregnancySection);
+    }
+</script>
+{% endblock %}

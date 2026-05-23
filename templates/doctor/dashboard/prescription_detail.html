@@ -1,0 +1,272 @@
+{% extends 'doctor/dashboard/base.html' %} {% load static %} {% block title %}Prescription Details | J.J. Dossen{% endblock %} {% block page_title %}Prescription Details{% endblock %} {% block extra_css %}
+<style>
+    .prescription-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border);
+    }
+    
+    .prescription-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border);
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .prescription-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .status-active {
+        background: #D1FAE5;
+        color: #059669;
+    }
+    
+    .status-completed {
+        background: #DBEAFE;
+        color: #2563EB;
+    }
+    
+    .status-cancelled {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .info-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+    }
+    
+    .info-value {
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .medication-box,
+    .diagnosis-box,
+    .instructions-box {
+        background: var(--bg-main);
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+    }
+    
+    .medication-box pre,
+    .diagnosis-box p,
+    .instructions-box p {
+        margin: 0;
+        white-space: pre-wrap;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+    
+    .btn-primary,
+    .btn-secondary,
+    .btn-danger,
+    .btn-success {
+        padding: 0.6rem 1.2rem;
+        border-radius: 10px;
+        font-weight: 500;
+        font-size: 0.85rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+    }
+    
+    .btn-success {
+        background: var(--success);
+        color: white;
+    }
+    
+    .btn-success:hover {
+        background: #059669;
+        transform: translateY(-1px);
+    }
+    
+    .btn-danger {
+        background: var(--danger);
+        color: white;
+    }
+    
+    .btn-danger:hover {
+        background: #DC2626;
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background: var(--hover-bg);
+        color: var(--text-secondary);
+        border: 1px solid var(--border);
+    }
+    
+    .btn-secondary:hover {
+        background: var(--border);
+        color: var(--text-primary);
+    }
+    
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+        .action-buttons {
+            flex-direction: column;
+        }
+        .btn-primary,
+        .btn-secondary,
+        .btn-danger,
+        .btn-success {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %} {% block content %}
+<div class="prescription-card">
+    <div class="prescription-header">
+        <div>
+            <div class="prescription-title">
+                <i class="fas fa-prescription-bottle"></i> Prescription
+            </div>
+            <div class="info-label" style="margin-top: 0.25rem;">
+                Created: {{ prescription.created_at|date:"F d, Y h:i A" }}
+            </div>
+        </div>
+        <div>
+            <span class="status-badge status-{{ prescription.status }}">
+                {{ prescription.get_status_display }}
+            </span>
+        </div>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-item">
+            <span class="info-label">Patient Name</span>
+            <span class="info-value">{{ prescription.patient.full_name }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Patient ID</span>
+            <span class="info-value">{{ prescription.patient.patient_id }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Doctor</span>
+            <span class="info-value">Dr. {{ prescription.doctor.get_full_name }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Age / Gender</span>
+            <span class="info-value">{{ prescription.patient.age }} / {{ prescription.patient.get_gender_display }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Blood Pressure</span>
+            <span class="info-value">{{ prescription.blood_pressure|default:"Not recorded" }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Temperature</span>
+            <span class="info-value">{{ prescription.temperature|default:"—" }} °C</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Pulse Rate</span>
+            <span class="info-value">{{ prescription.pulse_rate|default:"—" }} bpm</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Weight</span>
+            <span class="info-value">{{ prescription.weight|default:"—" }} kg</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Duration</span>
+            <span class="info-value">{{ prescription.duration_days }} days</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Follow-up Required</span>
+            <span class="info-value">{{ prescription.follow_up_required|yesno:"Yes,No" }}</span>
+        </div>
+        {% if prescription.completed_at %}
+        <div class="info-item">
+            <span class="info-label">Completed Date</span>
+            <span class="info-value">{{ prescription.completed_at|date:"F d, Y" }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="diagnosis-box">
+        <strong><i class="fas fa-stethoscope"></i> Diagnosis</strong>
+        <p style="margin-top: 0.5rem;">{{ prescription.diagnosis }}</p>
+    </div>
+
+    <div class="medication-box">
+        <strong><i class="fas fa-pills"></i> Medications</strong>
+        <pre style="margin-top: 0.5rem; white-space: pre-wrap;">{{ prescription.medications }}</pre>
+    </div>
+
+    <div class="instructions-box">
+        <strong><i class="fas fa-info-circle"></i> Instructions</strong>
+        <p style="margin-top: 0.5rem;">{{ prescription.instructions|default:"No additional instructions" }}</p>
+    </div>
+
+    <div class="action-buttons">
+        <a href="{% url 'doctor:prescription_edit' prescription.id %}" class="btn-primary">
+            <i class="fas fa-edit"></i> Edit
+        </a>
+        <a href="{% url 'doctor:prescription_print' prescription.id %}" class="btn-success" target="_blank">
+            <i class="fas fa-print"></i> Print
+        </a>
+        {% if prescription.status == 'active' %}
+        <a href="{% url 'doctor:prescription_clear' prescription.id %}" class="btn-success" onclick="return confirm('Mark this prescription as completed?')">
+            <i class="fas fa-check-double"></i> Mark Complete
+        </a>
+        {% endif %}
+        <a href="{% url 'doctor:prescription_delete' prescription.id %}" class="btn-danger" onclick="return confirm('Delete this prescription?')">
+            <i class="fas fa-trash"></i> Delete
+        </a>
+        <a href="{% url 'doctor:prescription_list' %}" class="btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+{% endblock %}

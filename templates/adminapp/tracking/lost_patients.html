@@ -1,0 +1,208 @@
+<!-- templates/adminapp/tracking/lost_patients.html -->
+{% extends 'adminapp/dashboard/base.html' %} {% load static %} {% block title %}Lost Patients | J.J. Dossen{% endblock %} {% block page_title %}Lost Patients Tracking{% endblock %} {% block extra_css %}
+<style>
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-card {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 1rem;
+        text-align: center;
+        border: 1px solid var(--border);
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--danger);
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+    
+    .filter-bar {
+        background: var(--bg-card);
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    
+    .filter-bar select,
+    .filter-bar input {
+        padding: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg-main);
+    }
+    
+    .patient-table {
+        width: 100%;
+        background: var(--bg-card);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .patient-table th,
+    .patient-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .patient-table th {
+        background: var(--bg-main);
+        font-weight: 600;
+    }
+    
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+    
+    .badge-danger {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+    
+    .badge-warning {
+        background: #FEF3C7;
+        color: #D97706;
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        border-radius: 6px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .btn-success {
+        background: #10B981;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    .pagination a,
+    .pagination span {
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+        text-decoration: none;
+        background: var(--bg-card);
+        color: var(--text-primary);
+    }
+    
+    .pagination .current {
+        background: var(--primary);
+        color: white;
+    }
+</style>
+{% endblock %} {% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ total_lost }}</div>
+        <div class="stat-label">Total Lost Patients</div>
+    </div>
+    {% for reason, count in lost_by_reason.items %}
+    <div class="stat-card">
+        <div class="stat-number">{{ count }}</div>
+        <div class="stat-label">{{ reason|title }}</div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="filter-bar">
+    <form method="get" style="display: flex; gap: 1rem; flex-wrap: wrap; width: 100%;">
+        <select name="reason">
+            <option value="">All Reasons</option>
+            <option value="no_contact" {% if reason_filter == 'no_contact' %}selected{% endif %}>No Contact</option>
+            <option value="moved_away" {% if reason_filter == 'moved_away' %}selected{% endif %}>Moved Away</option>
+            <option value="refused_treatment" {% if reason_filter == 'refused_treatment' %}selected{% endif %}>Refused Treatment</option>
+            <option value="transferred" {% if reason_filter == 'transferred' %}selected{% endif %}>Transferred</option>
+            <option value="deceased" {% if reason_filter == 'deceased' %}selected{% endif %}>Deceased</option>
+            <option value="other" {% if reason_filter == 'other' %}selected{% endif %}>Other</option>
+        </select>
+        <input type="text" name="search" placeholder="Search patient..." value="{{ search }}">
+        <button type="submit" class="btn-sm" style="background: var(--primary); color: white; border: none; padding: 0.5rem 1rem;">Filter</button>
+        <a href="{% url 'adminapp:lost_patients' %}" class="btn-sm" style="background: var(--hover-bg); text-decoration: none;">Clear</a>
+    </form>
+</div>
+
+<table class="patient-table">
+    <thead>
+        <tr>
+            <th>Patient Name</th>
+            <th>Patient ID</th>
+            <th>Lost Date</th>
+            <th>Reason</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for lost in page_obj %}
+        <tr>
+            <td>{{ lost.patient.full_name }}</td>
+            <td>{{ lost.patient.patient_id }}</td>
+            <td>{{ lost.lost_date|date:"M d, Y" }}</td>
+            <td>{{ lost.get_reason_display }}</td>
+            <td>
+                {% if lost.recovered %}
+                <span class="badge badge-success">Recovered</span> {% else %}
+                <span class="badge badge-danger">Lost</span> {% endif %}
+            </td>
+            <td>
+                <a href="{% url 'adminapp:admin_patient_tracking' lost.patient.id %}" class="btn-sm" style="background: var(--info); color: white; text-decoration: none;">
+                    <i class="fas fa-eye"></i> View
+                </a>
+                {% if not lost.recovered %}
+                <a href="{% url 'adminapp:mark_patient_recovered' lost.id %}" class="btn-sm btn-success" style="text-decoration: none;">
+                    <i class="fas fa-check"></i> Mark Recovered
+                </a>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6" style="text-align: center; padding: 2rem;">
+                <i class="fas fa-check-circle" style="font-size: 3rem; color: #10B981;"></i>
+                <p>No lost patients found!</p>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if page_obj.has_other_pages %}
+<div class="pagination">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% if reason_filter %}&reason={{ reason_filter }}{% endif %}{% if search %}&search={{ search }}{% endif %}">Previous</a> {% endif %}
+
+    <span class="current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span> {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if reason_filter %}&reason={{ reason_filter }}{% endif %}{% if search %}&search={{ search }}{% endif %}">Next</a> {% endif %}
+</div>
+{% endif %} {% endblock %}

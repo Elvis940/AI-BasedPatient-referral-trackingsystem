@@ -1,0 +1,172 @@
+{% extends 'adminapp/dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Roles & Permissions | J.J. Dossen{% endblock %}
+{% block page_title %}Roles & Permissions{% endblock %}
+
+{% block extra_css %}
+<style>
+    .permissions-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .role-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+    
+    .role-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1rem 1.25rem;
+        background: var(--bg-main);
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .role-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+    
+    .role-icon.doctor { background: rgba(16, 185, 129, 0.1); color: #10B981; }
+    .role-icon.chw { background: rgba(245, 158, 11, 0.1); color: #F59E0B; }
+    
+    .role-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 2px;
+    }
+    
+    .role-count {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+    }
+    
+    .permissions-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .permissions-table th {
+        padding: 0.6rem 1rem;
+        text-align: left;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        background: var(--bg-card);
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .permissions-table td {
+        padding: 0.6rem 1rem;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.8rem;
+    }
+    
+    .permissions-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .permission-check {
+        color: #10B981;
+        font-size: 1rem;
+    }
+    
+    .permission-x {
+        color: #EF4444;
+        font-size: 1rem;
+    }
+    
+    .info-box {
+        background: var(--bg-main);
+        border-radius: 12px;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        border-left: 3px solid var(--primary);
+    }
+    
+    .info-box i {
+        color: var(--primary);
+        font-size: 1rem;
+    }
+    
+    @media (max-width: 640px) {
+        .permissions-table {
+            font-size: 0.7rem;
+        }
+        .permissions-table th, .permissions-table td {
+            padding: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="permissions-container">
+    <!-- Doctors Section -->
+    <div class="role-card">
+        <div class="role-header">
+            <div class="role-icon doctor"><i class="fas fa-user-md"></i></div>
+            <div>
+                <div class="role-title">Doctors</div>
+                <div class="role-count">{{ doctors|length }} doctors registered</div>
+            </div>
+        </div>
+        <table class="permissions-table">
+            <thead><tr><th>Permission</th><th style="width:80px">Default</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td>Create Patients</td><td><i class="fas fa-check-circle permission-check"></i></td><td>Can register new patients</td></tr>
+                <tr><td>Edit Patients</td><td><i class="fas fa-check-circle permission-check"></i></td><td>Can update patient information</td></tr>
+                <tr><td>Delete Patients</td><td><i class="fas fa-times-circle permission-x"></i></td><td>Cannot delete patient records</td></tr>
+                <tr><td>Create Referrals</td><td><i class="fas fa-check-circle permission-check"></i></td><td>Can refer patients to other facilities</td></tr>
+                <tr><td>Edit Referrals</td><td><i class="fas fa-check-circle permission-check"></i></td><td>Can update referral information</td></tr>
+                <tr><td>View Reports</td><td><i class="fas fa-times-circle permission-x"></i></td><td>Cannot access system reports</td></tr>
+                <tr><td>Manage Users</td><td><i class="fas fa-times-circle permission-x"></i></td><td>Cannot manage other users</td></tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- CHWs Section -->
+    <div class="role-card">
+        <div class="role-header">
+            <div class="role-icon chw"><i class="fas fa-hands-helping"></i></div>
+            <div>
+                <div class="role-title">Community Health Workers</div>
+                <div class="role-count">{{ chws|length }} CHWs registered</div>
+            </div>
+        </div>
+        <table class="permissions-table">
+            <thead><tr><th>Permission</th><th style="width:80px">Default</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td>Create Patients</td><td><i class="fas fa-check-circle permission-check"></i></td><td>Can register new patients in villages</td></tr>
+                <tr><td>Edit Patients</td><td><i class="fas fa-check-circle permission-check"></i></td><td>Can update patient information</td></tr>
+                <tr><td>Delete Patients</td><td><i class="fas fa-times-circle permission-x"></i></td><td>Cannot delete patient records</td></tr>
+                <tr><td>Create Referrals</td><td><i class="fas fa-check-circle permission-check"></i></td><td>Can refer patients to clinics/hospitals</td></tr>
+                <tr><td>Edit Referrals</td><td><i class="fas fa-check-circle permission-check"></i></td><td>Can update referral status</td></tr>
+                <tr><td>View Reports</td><td><i class="fas fa-times-circle permission-x"></i></td><td>Cannot access system reports</td></tr>
+                <tr><td>Manage Users</td><td><i class="fas fa-times-circle permission-x"></i></td><td>Cannot manage other users</td></tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Info Box -->
+    <div class="info-box">
+        <i class="fas fa-info-circle"></i>
+        <span>Permissions can be customized for individual users when editing their profile. These are the default permissions assigned to each role.</span>
+    </div>
+</div>
+{% endblock %}

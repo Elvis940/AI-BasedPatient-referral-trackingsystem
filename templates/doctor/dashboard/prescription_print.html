@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prescription - {{ prescription.patient.full_name }}</title>
+    <style>
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: white;
+        }
+        
+        .prescription-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #10B981;
+            padding-bottom: 20px;
+        }
+        
+        .header h1 {
+            color: #10B981;
+            margin-bottom: 5px;
+            font-size: 24px;
+        }
+        
+        .header p {
+            color: #6B7280;
+            margin: 0;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #F3F4F6;
+            border-radius: 10px;
+        }
+        
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .info-label {
+            font-size: 11px;
+            color: #6B7280;
+            margin-bottom: 3px;
+        }
+        
+        .info-value {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .section {
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            color: #10B981;
+            margin-bottom: 10px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .diagnosis-box,
+        .medication-box,
+        .instructions-box {
+            padding: 10px;
+            background: #F9FAFB;
+            border-radius: 8px;
+            border-left: 3px solid #10B981;
+        }
+        
+        .medication-box pre {
+            white-space: pre-wrap;
+            font-family: inherit;
+            margin: 0;
+        }
+        
+        .vitals-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            border-top: 1px solid #E5E7EB;
+            padding-top: 20px;
+            font-size: 10px;
+            color: #6B7280;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="prescription-container">
+        <div class="header">
+            <h1>J.J. Dossen Memorial Hospital</h1>
+            <p>Patient Prescription</p>
+            <p style="font-size: 10px;">Your Health, Our Priority</p>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Patient Name</span>
+                <span class="info-value">{{ prescription.patient.full_name }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Date</span>
+                <span class="info-value">{{ prescription.created_at|date:"F d, Y" }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Patient ID</span>
+                <span class="info-value">{{ prescription.patient.patient_id }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Doctor</span>
+                <span class="info-value">Dr. {{ prescription.doctor.get_full_name }}</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Diagnosis</div>
+            <div class="diagnosis-box">
+                <p style="margin: 0;">{{ prescription.diagnosis }}</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Medications</div>
+            <div class="medication-box">
+                <pre>{{ prescription.medications }}</pre>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Instructions</div>
+            <div class="instructions-box">
+                <p style="margin: 0;">{{ prescription.instructions|default:"No additional instructions" }}</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Vital Signs</div>
+            <div class="vitals-grid">
+                <div><strong>Blood Pressure:</strong> {{ prescription.blood_pressure|default:"Not recorded" }}</div>
+                <div><strong>Temperature:</strong> {{ prescription.temperature|default:"—" }} °C</div>
+                <div><strong>Pulse Rate:</strong> {{ prescription.pulse_rate|default:"—" }} bpm</div>
+                <div><strong>Weight:</strong> {{ prescription.weight|default:"—" }} kg</div>
+                <div><strong>Duration:</strong> {{ prescription.duration_days }} days</div>
+                <div><strong>Follow-up:</strong> {{ prescription.follow_up_required|yesno:"Required,Not required" }}</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Doctor's Signature: ___________________</p>
+            <p>This is a computer-generated prescription. No signature required.</p>
+            <p>J.J. Dossen Memorial Hospital - Your Health, Our Priority</p>
+        </div>
+    </div>
+
+    <div class="no-print" style="text-align: center; margin-top: 20px;">
+        <button onclick="window.print()" style="padding: 10px 20px; background: #10B981; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            <i class="fas fa-print"></i> Print / Save as PDF
+        </button>
+    </div>
+</body>
+
+</html>

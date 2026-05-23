@@ -1,0 +1,228 @@
+{% extends 'doctor/dashboard/base.html' %} {% load static %} {% block title %}Prescription History | J.J. Dossen{% endblock %} {% block page_title %}Prescription History{% endblock %} {% block extra_css %}
+<style>
+    .stats-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .stats-number {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+    
+    .filter-bar {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border);
+    }
+    
+    .filter-form {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+    
+    .filter-group {
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .filter-group label {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        color: var(--text-secondary);
+    }
+    
+    .filter-group input {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 0.8rem;
+    }
+    
+    .prescriptions-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--bg-card);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .prescriptions-table th {
+        padding: 0.75rem 1rem;
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        background: var(--bg-main);
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .prescriptions-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.8rem;
+    }
+    
+    .prescriptions-table tr:hover {
+        background: var(--hover-bg);
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    .pagination a,
+    .pagination span {
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.8rem;
+    }
+    
+    .pagination a {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+    }
+    
+    .pagination .current {
+        background: var(--primary);
+        color: white;
+    }
+    
+    .btn-filter {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        border: none;
+    }
+    
+    .btn-filter-primary {
+        background: var(--primary);
+        color: white;
+    }
+    
+    .btn-filter-secondary {
+        background: var(--hover-bg);
+        color: var(--text-secondary);
+    }
+    
+    .view-btn {
+        color: var(--primary);
+        text-decoration: none;
+    }
+    
+    .view-btn:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %} {% block content %}
+<div class="stats-card">
+    <div>
+        <span class="stats-number">{{ total_prescriptions }}</span>
+        <span style="margin-left: 0.5rem; color: var(--text-secondary);">Total Prescriptions Written</span>
+    </div>
+</div>
+
+<div class="filter-bar">
+    <form method="get" class="filter-form">
+        <div class="filter-group">
+            <label>Search</label>
+            <input type="text" name="search" placeholder="Patient name or diagnosis..." value="{{ search }}">
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn-filter btn-filter-primary">Search</button>
+            <a href="{% url 'doctor:prescription_history' %}" class="btn-filter btn-filter-secondary">Reset</a>
+        </div>
+    </form>
+</div>
+
+<table class="prescriptions-table">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Patient</th>
+            <th>Diagnosis</th>
+            <th>Medications</th>
+            <th>Duration</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for prescription in page_obj %}
+        <tr>
+            <td>{{ prescription.created_at|date:"M d, Y" }}</td>
+            <td>
+                <strong>{{ prescription.patient.full_name }}</strong><br>
+                <small>{{ prescription.patient.patient_id }}</small>
+            </td>
+            <td>{{ prescription.diagnosis|truncatechars:40 }}</td>
+            <td>{{ prescription.medications|truncatechars:50 }}</td>
+            <td>{{ prescription.duration_days }} days</td>
+            <td>
+                <span class="status-badge" style="background: {% if prescription.status == 'active' %}#D1FAE5; color:#059669{% else %}#FEE2E2; color:#DC2626{% endif %};">
+                    {{ prescription.get_status_display }}
+                </span>
+            </td>
+            <td>
+                <a href="{% url 'doctor:patient_history' prescription.patient.id %}" class="view-btn">
+                    View Patient
+                </a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" style="text-align: center; padding: 2rem;">
+                <i class="fas fa-prescription-bottle" style="font-size: 2rem; color: var(--text-muted);"></i>
+                <p>No prescriptions found</p>
+                <a href="{% url 'doctor:write_prescription' %}" class="btn-filter btn-filter-primary" style="margin-top: 1rem;">
+                    Write First Prescription
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if page_obj.has_other_pages %}
+<div class="pagination">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">
+        <i class="fas fa-chevron-left"></i> Prev
+    </a>
+    {% endif %} {% for num in page_obj.paginator.page_range %} {% if page_obj.number == num %}
+    <span class="current">{{ num }}</span> {% elif num > page_obj.number|add:'-3' and num
+    < page_obj.number|add: '3' %} <a href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}">{{ num }}</a>
+        {% endif %} {% endfor %} {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}">
+            Next <i class="fas fa-chevron-right"></i>
+        </a> {% endif %}
+</div>
+{% endif %} {% endblock %}

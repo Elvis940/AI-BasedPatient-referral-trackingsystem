@@ -1,0 +1,794 @@
+{% extends 'chw/dashboard/base.html' %} {% load static %} {% block title %}Patient Tracking | {{ patient.full_name }} | J.J. Dossen{% endblock %} {% block page_title %}Tracking: {{ patient.full_name }}{% endblock %} {% block extra_css %}
+<style>
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 1rem;
+        text-align: center;
+        border: 1px solid var(--border);
+    }
+    
+    .stat-number {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+    
+    .stat-label {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+    }
+    
+    .tracking-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid var(--border);
+    }
+    
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border);
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+    
+    .status-pending_admin {
+        background: #FEF3C7;
+        color: #D97706;
+    }
+    
+    .status-approved {
+        background: #DBEAFE;
+        color: #2563EB;
+    }
+    
+    .status-in_progress {
+        background: #E0E7FF;
+        color: #4338CA;
+    }
+    
+    .status-completed {
+        background: #D1FAE5;
+        color: #059669;
+    }
+    
+    .status-active {
+        background: #D1FAE5;
+        color: #059669;
+    }
+    
+    .status-cancelled {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+    
+    .timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+    
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 0.7rem;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--border);
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding-bottom: 1.5rem;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -1.3rem;
+        top: 0;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--primary);
+        border: 2px solid var(--bg-card);
+    }
+    
+    .timeline-item.primary::before {
+        background: var(--primary);
+    }
+    
+    .timeline-item.success::before {
+        background: var(--success);
+    }
+    
+    .timeline-item.info::before {
+        background: var(--info);
+    }
+    
+    .timeline-item.warning::before {
+        background: var(--warning);
+    }
+    
+    .timeline-date {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+    }
+    
+    .timeline-title {
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .timeline-desc {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+    
+    .alert-item {
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .alert-high {
+        background: #FEE2E2;
+        border-left: 3px solid #DC2626;
+    }
+    
+    .alert-medium {
+        background: #FEF3C7;
+        border-left: 3px solid #F59E0B;
+    }
+    
+    .alert-low {
+        background: #DBEAFE;
+        border-left: 3px solid #3B82F6;
+    }
+    
+    .medication-item {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .medication-item:last-child {
+        border-bottom: none;
+    }
+    
+    .prescription-item {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-main);
+        margin-bottom: 0.5rem;
+        border-radius: 8px;
+    }
+    
+    .prescription-item:last-child {
+        border-bottom: none;
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.7rem;
+        border-radius: 6px;
+        text-decoration: none;
+        cursor: pointer;
+        border: none;
+        display: inline-block;
+    }
+    
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+    
+    .btn-secondary {
+        background: var(--bg-main);
+        color: var(--text-primary);
+        border: 1px solid var(--border);
+        padding: 8px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+    }
+    /* Message Modal Styles */
+    
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal.active {
+        display: flex;
+    }
+    
+    .modal-content {
+        background: var(--bg-card);
+        border-radius: 16px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .modal-header {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+    }
+    
+    .modal-footer {
+        padding: 1rem;
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.25rem;
+        font-weight: 500;
+    }
+    
+    .form-group select,
+    .form-group textarea,
+    .form-group input {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg-main);
+        color: var(--text-primary);
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg-main);
+    }
+    
+    .message-preview {
+        background: var(--bg-main);
+        padding: 0.75rem;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+        border-left: 3px solid var(--primary);
+    }
+    
+    .quick-template {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        background: var(--bg-main);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-size: 0.7rem;
+        cursor: pointer;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .quick-template:hover {
+        background: var(--primary);
+        color: white;
+    }
+    
+    .char-count {
+        font-size: 0.7rem;
+        text-align: right;
+        margin-top: 0.25rem;
+        color: var(--text-muted);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        display: block;
+    }
+    
+    .text-danger {
+        color: #DC2626;
+    }
+    
+    .text-muted {
+        color: var(--text-muted);
+    }
+    
+    .badge-prescription {
+        background: #8B5CF6;
+        color: white;
+        padding: 0.2rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.65rem;
+    }
+    
+    @media (max-width: 768px) {
+        .stats-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .card-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+{% endblock %} {% block content %}
+<!-- Patient Contact Info Bar -->
+<div class="tracking-card" style="background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%); color: white;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h4 style="margin: 0 0 0.5rem 0;">{{ patient.full_name }}</h4>
+            <div style="font-size: 0.85rem; opacity: 0.9;">
+                <i class="fas fa-phone"></i> {{ patient.phone_number|default:"No phone number" }} &nbsp;|&nbsp;
+                <i class="fas fa-envelope"></i> {{ patient.email|default:"No email" }}
+            </div>
+        </div>
+        <div>
+            <button onclick="openMessageModal()" class="btn-primary" style="background: white; color: var(--primary);">
+                <i class="fas fa-comment-dots"></i> Send Email
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-number">{{ total_referrals }}</div>
+        <div class="stat-label">Total Referrals</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ active_referrals }}</div>
+        <div class="stat-label">Active</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ completed_referrals }}</div>
+        <div class="stat-label">Completed</div>
+    </div>
+    {% if avg_time_to_treatment %}
+    <div class="stat-card">
+        <div class="stat-number">{{ avg_time_to_treatment }}</div>
+        <div class="stat-label">Avg Hours to Treatment</div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Alerts Section -->
+{% if alerts %}
+<div class="tracking-card">
+    <div class="card-header">
+        <strong><i class="fas fa-bell"></i> Alerts & Notifications</strong>
+        <span class="status-badge status-pending_admin">{{ alerts|length }} Alert(s)</span>
+    </div>
+    {% for alert in alerts %}
+    <div class="alert-item alert-{{ alert.severity }}">
+        <div>
+            <i class="fas {% if alert.severity == 'high' %}fa-exclamation-triangle{% elif alert.severity == 'medium' %}fa-clock{% else %}fa-info-circle{% endif %}"></i>
+        </div>
+        <div style="flex: 1;">
+            <strong>{{ alert.type|title }}</strong><br>
+            <small>{{ alert.message }}</small>
+        </div>
+        <div>
+            <button onclick="openMessageWithAlert('{{ alert.message|escapejs }}')" class="btn-sm" style="background: var(--primary); color: white;">
+                Message Patient
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Referrals Timeline -->
+<div class="tracking-card">
+    <div class="card-header">
+        <strong><i class="fas fa-exchange-alt"></i> Referral History</strong>
+    </div>
+    {% for referral in referrals %}
+    <div style="margin-bottom: 1rem; padding: 0.75rem; background: var(--bg-main); border-radius: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <div>
+                <strong>{{ referral.referral_code }}</strong>
+                <span class="status-badge status-{{ referral.status }}">{{ referral.get_status_display }}</span>
+            </div>
+            <div>
+                <small>{{ referral.created_at|date:"M d, Y" }}</small>
+            </div>
+        </div>
+        <div style="margin-top: 0.5rem;">
+            <div>📋 Specialist: {{ referral.get_specialist_display }}</div>
+            <div>⚠️ Urgency: {{ referral.get_urgency_display }}</div>
+            {% if referral.doctor %}
+            <div>👨‍⚕️ Doctor: Dr. {{ referral.doctor.get_full_name }}</div>
+            {% endif %} {% if referral.check_in_time %}
+            <div>✅ Checked in: {{ referral.check_in_time|date:"M d, h:i A" }}</div>
+            {% endif %} {% if referral.check_out_time %}
+            <div>📤 Checked out: {{ referral.check_out_time|date:"M d, h:i A" }}</div>
+            {% endif %} {% if referral.completed_at %}
+            <div>🎉 Completed: {{ referral.completed_at|date:"M d, Y" }}</div>
+            {% endif %}
+        </div>
+        <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
+            <a href="{% url 'referrals:referral_detail' referral.id %}" class="btn-sm" style="background: var(--info); color: white; text-decoration: none;">View Details</a>
+            <button onclick="openMessageForReferral('{{ referral.id }}', '{{ referral.referral_code }}')" class="btn-sm" style="background: var(--primary); color: white;">
+                <i class="fas fa-paper-plane"></i> Message
+            </button>
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <i class="fas fa-exchange-alt"></i>
+        <p>No referrals found for this patient.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Patient Journey Timeline -->
+<div class="tracking-card">
+    <div class="card-header">
+        <strong><i class="fas fa-chart-line"></i> Patient Journey Timeline</strong>
+    </div>
+    {% if timeline %}
+    <div class="timeline">
+        {% for event in timeline %}
+        <div class="timeline-item {{ event.color }}">
+            <div class="timeline-date">{{ event.date|date:"M d, Y h:i A" }}</div>
+            <div class="timeline-title">
+                <i class="fas {{ event.icon }}"></i> {{ event.title }}
+            </div>
+            <div class="timeline-desc">{{ event.description }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-chart-line"></i>
+        <p>No timeline events yet.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Prescribed Medications Section -->
+<div class="tracking-card">
+    <div class="card-header">
+        <strong><i class="fas fa-pills"></i> Prescribed Medications & Treatments</strong> {% if medications %}
+        <button onclick="openMedicationReminder()" class="btn-sm" style="background: var(--success); color: white;">
+            <i class="fas fa-bell"></i> Send General Reminder
+        </button> {% endif %}
+    </div>
+
+    {% if medications %} {% for item in medications %} {% if item.source == 'prescription' %}
+    <!-- Display Prescription -->
+    <div class="prescription-item">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap;">
+            <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                    <strong>📋 {{ item.medication_name }}</strong>
+                    <span class="badge-prescription">Full Prescription</span>
+                    <span class="status-badge status-{{ item.status }}">{{ item.status|title }}</span>
+                </div>
+                <div style="font-size: 0.85rem; margin-top: 0.25rem;">
+                    📝 Diagnosis: {{ item.diagnosis|truncatechars:150 }}<br> 💊 Medications: {{ item.medications_text|truncatechars:200 }}<br> 📅 Duration: {{ item.duration_days }} days
+                </div>
+                {% if item.instructions %}
+                <div style="margin-top: 0.25rem; font-size: 0.75rem; color: var(--text-secondary);">
+                    <i class="fas fa-info-circle"></i> {{ item.instructions }}
+                </div>
+                {% endif %}
+                <div style="margin-top: 0.25rem; font-size: 0.7rem; color: var(--text-muted);">
+                    <i class="fas fa-user-md"></i> Prescribed by: Dr. {{ item.prescribed_by.get_full_name|default:"Unknown" }}<br>
+                    <i class="fas fa-calendar-alt"></i> Prescribed on: {{ item.prescribed_at|date:"M d, Y H:i" }}
+                </div>
+            </div>
+            <div style="margin-top: 0.5rem;">
+                <button onclick="openPrescriptionMessage('{{ item.medications_text|escapejs }}', '{{ item.diagnosis|escapejs }}')" class="btn-sm" style="background: var(--primary); color: white;">
+                                <i class="fas fa-file-prescription"></i> Send Reminder
+                            </button>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Display Individual Medication -->
+    <div class="medication-item">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap;">
+            <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                    <strong>💊 {{ item.medication_name }}</strong>
+                    <span class="status-badge status-{{ item.status }}">{{ item.status|title }}</span>
+                </div>
+                <div style="font-size: 0.85rem; margin-top: 0.25rem;">
+                    💊 Dosage: {{ item.dosage }}<br> ⏰ Frequency: {{ item.frequency }}<br> 📅 Duration: {{ item.duration_days }} days
+                </div>
+                {% if item.instructions %}
+                <div style="margin-top: 0.25rem; font-size: 0.75rem; color: var(--text-secondary);">
+                    <i class="fas fa-info-circle"></i> {{ item.instructions }}
+                </div>
+                {% endif %}
+                <div style="margin-top: 0.25rem; font-size: 0.7rem; color: var(--text-muted);">
+                    <i class="fas fa-user-md"></i> Prescribed by: Dr. {{ item.prescribed_by.get_full_name|default:"Unknown" }}<br>
+                    <i class="fas fa-calendar-alt"></i> Prescribed on: {{ item.prescribed_at|date:"M d, Y" }}
+                </div>
+            </div>
+            <div style="margin-top: 0.5rem;">
+                <button onclick="openMedicationMessage('{{ item.medication_name|escapejs }}', '{{ item.dosage|escapejs }}', '{{ item.frequency|escapejs }}')" class="btn-sm" style="background: var(--primary); color: white;">
+                                <i class="fas fa-pill"></i> Send Reminder
+                            </button>
+            </div>
+        </div>
+    </div>
+    {% endif %} {% endfor %} {% else %}
+    <div class="empty-state">
+        <i class="fas fa-pills"></i>
+        <p>No medications or prescriptions have been prescribed yet.</p>
+        <small class="text-muted">Once the doctor prescribes medication, it will appear here.</small>
+    </div>
+    {% endif %}
+</div>
+
+<div style="margin-top: 1rem;">
+    <a href="{% url 'patients:all_patients' %}" class="btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Patients
+    </a>
+</div>
+
+<!-- Message Modal -->
+<div id="messageModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h4><i class="fas fa-envelope"></i> Send Email to {{ patient.full_name }}</h4>
+            <button onclick="closeMessageModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        <form id="messageForm" method="POST" action="{% url 'chw:send_patient_message' 0 %}">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" class="form-control" value="{{ patient.email|default:'No email on file' }}" readonly disabled> {% if not patient.email %}
+                    <small class="text-danger">⚠️ No email address found for this patient. Please update patient record.</small> {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label>Subject</label>
+                    <input type="text" name="subject" id="messageSubject" class="form-control" placeholder="e.g., Appointment Reminder, Medication Reminder">
+                </div>
+
+                <div class="form-group">
+                    <label>Message</label>
+                    <textarea name="message" id="messageBody" rows="6" placeholder="Type your message here..." required></textarea>
+                    <div class="char-count">
+                        <span id="charCount">0</span> characters
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Quick Templates</label>
+                    <div>
+                        <span class="quick-template" onclick="useTemplate('appointment')">
+                            📅 Appointment Reminder
+                        </span>
+                        <span class="quick-template" onclick="useTemplate('medication')">
+                            💊 Medication Reminder
+                        </span>
+                        <span class="quick-template" onclick="useTemplate('missed')">
+                            ⚠️ Missed Appointment
+                        </span>
+                        <span class="quick-template" onclick="useTemplate('followup')">
+                            📋 Follow-up Needed
+                        </span>
+                        <span class="quick-template" onclick="useTemplate('treatment')">
+                            🏥 Treatment Update
+                        </span>
+                    </div>
+                </div>
+
+                <div id="messagePreview" class="message-preview" style="display: none;">
+                    <strong>Preview:</strong>
+                    <p id="previewText"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeMessageModal()" class="btn-secondary">Cancel</button>
+                <button type="submit" class="btn-primary" id="sendBtn" {% if not patient.email %}disabled{% endif %}>
+                    <i class="fas fa-paper-plane"></i> Send Email
+                </button>
+            </div>
+            <input type="hidden" name="referral_id" id="selectedReferralId" value="">
+            <input type="hidden" name="patient_id" value="{{ patient.id }}">
+        </form>
+    </div>
+</div>
+
+<script>
+    // Get patient data from Django template
+    const patientName = "{{ patient.full_name|escapejs }}";
+    const patientEmail = "{{ patient.email|default:''|escapejs }}";
+
+    // Message templates
+    const templates = {
+        appointment: `Dear ${patientName},\n\nThis is a reminder of your appointment at J.J. Dossen Hospital. Please arrive 15 minutes early with your referral letter.\n\nFor questions, contact your Community Health Worker.\n\nThank you,\nJ.J. Dossen Hospital`,
+
+        medication: `Dear ${patientName},\n\nReminder to take your medication as prescribed:\n• Take medication at the same time each day\n• Do not skip doses\n• Complete the full course even if you feel better\n\nFor questions, contact your Community Health Worker.\n\nStay healthy!\n\nJ.J. Dossen Hospital`,
+
+        missed: `Dear ${patientName},\n\nWe noticed you missed your scheduled appointment at J.J. Dossen Hospital.\n\nPlease contact your Community Health Worker to reschedule as soon as possible.\n\nYour health is important to us.\n\nBest regards,\nJ.J. Dossen Hospital`,
+
+        followup: `Dear ${patientName},\n\nIt's time for your follow-up appointment regarding your recent treatment at J.J. Dossen Hospital.\n\nPlease visit the hospital for your scheduled check-up to monitor your recovery.\n\nBest regards,\nJ.J. Dossen Hospital`,
+
+        treatment: `Dear ${patientName},\n\nYour treatment plan is progressing. Please continue following the doctor's instructions and attend all scheduled appointments.\n\nIf you experience any side effects or have concerns, contact your Community Health Worker immediately.\n\nTake care,\nJ.J. Dossen Hospital`
+    };
+
+    function openMessageModal() {
+        if (!patientEmail) {
+            alert('⚠️ This patient does not have an email address on file. Please update the patient record first.');
+            return;
+        }
+        document.getElementById('messageModal').classList.add('active');
+        document.getElementById('selectedReferralId').value = '';
+        document.getElementById('messageSubject').value = '';
+        document.getElementById('messageBody').value = '';
+        document.getElementById('charCount').innerText = '0';
+        document.getElementById('messagePreview').style.display = 'none';
+    }
+
+    function closeMessageModal() {
+        document.getElementById('messageModal').classList.remove('active');
+    }
+
+    function openMessageForReferral(referralId, referralCode) {
+        openMessageModal();
+        document.getElementById('selectedReferralId').value = referralId;
+        document.getElementById('messageSubject').value = `Update for Referral ${referralCode}`;
+    }
+
+    function openMessageWithAlert(alertMessage) {
+        openMessageModal();
+        document.getElementById('messageBody').value = `Dear ${patientName},\n\n${alertMessage}\n\nPlease respond to this message or contact your Community Health Worker for assistance.\n\nJ.J. Dossen Hospital`;
+        updateCharCount();
+    }
+
+    function openMedicationMessage(medName, dosage, frequency) {
+        openMessageModal();
+        const message = `Dear ${patientName},\n\nMedication Reminder:\n• Medication: ${medName}\n• Dosage: ${dosage}\n• Frequency: ${frequency}\n\nPlease take your medication as prescribed by the doctor.\n\nJ.J. Dossen Hospital`;
+        document.getElementById('messageBody').value = message;
+        document.getElementById('messageSubject').value = `Medication Reminder: ${medName}`;
+        updateCharCount();
+    }
+
+    function openPrescriptionMessage(medications, diagnosis) {
+        openMessageModal();
+        const message = `Dear ${patientName},\n\nYour doctor has prescribed the following treatment:\n\nDiagnosis: ${diagnosis}\n\nMedications: ${medications}\n\nPlease follow the doctor's instructions carefully and complete the full course of treatment.\n\nIf you have any questions or experience side effects, contact your Community Health Worker immediately.\n\nJ.J. Dossen Hospital`;
+        document.getElementById('messageBody').value = message;
+        document.getElementById('messageSubject').value = 'Prescription Reminder';
+        updateCharCount();
+    }
+
+    function openMedicationReminder() {
+        openMessageModal();
+        const message = `Dear ${patientName},\n\nGeneral Medication Reminder:\n• Take medications at prescribed times\n• Do not miss doses\n• Complete the full treatment course\n• Report any side effects to your CHW\n\nJ.J. Dossen Hospital`;
+        document.getElementById('messageBody').value = message;
+        document.getElementById('messageSubject').value = 'Medication Reminder';
+        updateCharCount();
+    }
+
+    function useTemplate(templateName) {
+        let message = templates[templateName];
+        if (message) {
+            document.getElementById('messageBody').value = message;
+            updateCharCount();
+
+            const subjects = {
+                appointment: 'Appointment Reminder',
+                medication: 'Medication Reminder',
+                missed: 'Missed Appointment Notification',
+                followup: 'Follow-up Appointment Required',
+                treatment: 'Treatment Plan Update'
+            };
+            document.getElementById('messageSubject').value = subjects[templateName] || 'Message from J.J. Dossen Hospital';
+        }
+    }
+
+    function updateCharCount() {
+        const text = document.getElementById('messageBody').value;
+        document.getElementById('charCount').innerText = text.length;
+
+        if (text.length > 0) {
+            document.getElementById('previewText').innerText = text;
+            document.getElementById('messagePreview').style.display = 'block';
+        } else {
+            document.getElementById('messagePreview').style.display = 'none';
+        }
+    }
+
+    document.getElementById('messageBody').addEventListener('input', updateCharCount);
+
+    document.getElementById('messageForm').addEventListener('submit', function(e) {
+        const message = document.getElementById('messageBody').value.trim();
+        const referralId = document.getElementById('selectedReferralId').value;
+
+        if (referralId) {
+            this.action = this.action.replace('/0', `/${referralId}`);
+        }
+
+        if (!message) {
+            e.preventDefault();
+            alert('Please enter a message.');
+            return false;
+        }
+
+        if (!patientEmail) {
+            e.preventDefault();
+            alert('No email address found for this patient.');
+            return false;
+        }
+
+        const sendBtn = document.getElementById('sendBtn');
+        const originalText = sendBtn.innerHTML;
+        sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        sendBtn.disabled = true;
+    });
+
+    window.onclick = function(event) {
+        const modal = document.getElementById('messageModal');
+        if (event.target === modal) {
+            closeMessageModal();
+        }
+    }
+</script>
+{% endblock %}

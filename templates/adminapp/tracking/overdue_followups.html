@@ -1,0 +1,184 @@
+<!-- templates/adminapp/tracking/overdue_followups.html -->
+{% extends 'adminapp/dashboard/base.html' %} {% load static %} {% block title %}Overdue Follow-ups | J.J. Dossen{% endblock %} {% block page_title %}Overdue Follow-ups{% endblock %} {% block extra_css %}
+<style>
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-card {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 1rem;
+        text-align: center;
+        border: 1px solid var(--border);
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--warning);
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+    
+    .overdue-table {
+        width: 100%;
+        background: var(--bg-card);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .overdue-table th,
+    .overdue-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .overdue-table th {
+        background: var(--bg-main);
+        font-weight: 600;
+    }
+    
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+    
+    .badge-danger {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+    
+    .badge-warning {
+        background: #FEF3C7;
+        color: #D97706;
+    }
+    
+    .badge-success {
+        background: #D1FAE5;
+        color: #059669;
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        border-radius: 6px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        margin-right: 0.25rem;
+    }
+    
+    .filter-bar {
+        background: var(--bg-card);
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+    }
+    
+    .urgency-high {
+        border-left: 3px solid #DC2626;
+    }
+    
+    .urgency-medium {
+        border-left: 3px solid #F59E0B;
+    }
+</style>
+{% endblock %} {% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ total_overdue }}</div>
+        <div class="stat-label">Total Overdue</div>
+    </div>
+    {% for type, count in by_type.items %}
+    <div class="stat-card">
+        <div class="stat-number">{{ count }}</div>
+        <div class="stat-label">{{ type|title }}</div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="filter-bar">
+    <form method="get" style="display: flex; gap: 1rem; align-items: center;">
+        <label>Filter by Type:</label>
+        <select name="type" onchange="this.form.submit()">
+            <option value="">All Types</option>
+            <option value="appointment" {% if type_filter == 'appointment' %}selected{% endif %}>Appointment</option>
+            <option value="medication_check" {% if type_filter == 'medication_check' %}selected{% endif %}>Medication Check</option>
+            <option value="test_result" {% if type_filter == 'test_result' %}selected{% endif %}>Test Result</option>
+            <option value="treatment_evaluation" {% if type_filter == 'treatment_evaluation' %}selected{% endif %}>Treatment Evaluation</option>
+        </select>
+        <a href="{% url 'adminapp:overdue_followups' %}" class="btn-sm" style="background: var(--hover-bg); text-decoration: none;">Clear</a>
+    </form>
+</div>
+
+<table class="overdue-table">
+    <thead>
+        <tr>
+            <th>Patient Name</th>
+            <th>Patient ID</th>
+            <th>Follow-up Type</th>
+            <th>Scheduled Date</th>
+            <th>Days Overdue</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for overdue in page_obj %}
+        <tr class="urgency-{% if overdue.overdue_days > 14 %}high{% elif overdue.overdue_days > 7 %}medium{% endif %}">
+            <td>{{ overdue.patient.full_name }}</td>
+            <td>{{ overdue.patient.patient_id }}</td>
+            <td>{{ overdue.get_follow_up_type_display }}</td>
+            <td>{{ overdue.scheduled_date|date:"M d, Y" }}</td>
+            <td style="color: var(--danger); font-weight: bold;">{{ overdue.overdue_days }} days</td>
+            <td>
+                {% if overdue.status == 'pending' %}
+                <span class="badge badge-danger">Pending</span> {% elif overdue.status == 'notified' %}
+                <span class="badge badge-warning">CHW Notified</span> {% elif overdue.status == 'resolved' %}
+                <span class="badge badge-success">Resolved</span> {% endif %}
+            </td>
+            <td>
+                <a href="{% url 'adminapp:admin_patient_tracking' overdue.patient.id %}" class="btn-sm" style="background: var(--info); color: white; text-decoration: none;">
+                    <i class="fas fa-eye"></i> View
+                </a>
+                {% if overdue.status != 'resolved' %}
+                <a href="{% url 'adminapp:send_reminder_to_chw' overdue.id %}" class="btn-sm" style="background: var(--warning); color: white; text-decoration: none;">
+                    <i class="fas fa-bell"></i> Send Reminder
+                </a>
+                <a href="{% url 'adminapp:resolve_overdue' overdue.id %}" class="btn-sm" style="background: var(--success); color: white; text-decoration: none;">
+                    <i class="fas fa-check"></i> Resolve
+                </a>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" style="text-align: center; padding: 2rem;">
+                <i class="fas fa-check-circle" style="font-size: 3rem; color: #10B981;"></i>
+                <p>No overdue follow-ups! All patients are up to date.</p>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if page_obj.has_other_pages %}
+<div class="pagination" style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 1rem;">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% if type_filter %}&type={{ type_filter }}{% endif %}">Previous</a> {% endif %}
+    <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span> {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if type_filter %}&type={{ type_filter }}{% endif %}">Next</a> {% endif %}
+</div>
+{% endif %} {% endblock %}

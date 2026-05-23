@@ -1,0 +1,379 @@
+{% extends 'adminapp/dashboard/base.html' %} {% load static %} {% block title %}Edit User | J.J. Dossen{% endblock %} {% block page_title %}Edit User: {{ user_obj.get_full_name }}{% endblock %} {% block extra_css %}
+<style>
+    .edit-user-wrapper {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .form-container {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+    }
+    
+    .form-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+        width: 100%;
+    }
+    
+    .form-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-card);
+    }
+    
+    .form-header h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .form-body {
+        padding: 1.5rem;
+    }
+    
+    .form-section {
+        background: var(--bg-main);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+    
+    .form-section h4 {
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-group label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.2s;
+        background: var(--bg-card);
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(10, 92, 142, 0.1);
+    }
+    
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    
+    .checkbox-group input {
+        width: auto;
+        margin-right: 0.5rem;
+    }
+    
+    .checkbox-group label {
+        margin-bottom: 0;
+        font-weight: normal;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        justify-content: flex-end;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        padding: 0.6rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 500;
+        font-size: 0.85rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background: var(--hover-bg);
+        color: var(--text-secondary);
+        border: 1px solid var(--border);
+    }
+    
+    .btn-secondary:hover {
+        background: var(--border);
+        color: var(--text-primary);
+    }
+    
+    .alert-error {
+        background: #FEE2E2;
+        color: #991B1B;
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        font-size: 0.8rem;
+        border-left: 3px solid var(--danger);
+    }
+    
+    .form-hint {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+    }
+    
+    @media (max-width: 768px) {
+        .form-body {
+            padding: 1.25rem;
+        }
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+        .form-actions {
+            flex-direction: column;
+        }
+        .btn-primary,
+        .btn-secondary {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %} {% block content %}
+<div class="edit-user-wrapper">
+    <div class="form-container">
+        <div class="form-card">
+            <div class="form-header">
+                <h3><i class="fas fa-edit"></i> Edit User: {{ user_obj.get_full_name|default:user_obj.username }}</h3>
+            </div>
+            <div class="form-body">
+                <form method="post">
+                    {% csrf_token %} {% if user_form.non_field_errors or profile_form.non_field_errors %}
+                    <div class="alert-error">
+                        {% for error in user_form.non_field_errors %}{{ error }}{% endfor %} {% for error in profile_form.non_field_errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Basic Information -->
+                    <div class="form-section">
+                        <h4><i class="fas fa-user-circle"></i> Basic Information</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>First Name</label> {{ user_form.first_name }}
+                            </div>
+                            <div class="form-group">
+                                <label>Last Name</label> {{ user_form.last_name }}
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Username</label> {{ user_form.username }}
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label> {{ user_form.email }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profile Information -->
+                    <div class="form-section">
+                        <h4><i class="fas fa-id-card"></i> Profile Information</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>User Type</label> {{ profile_form.user_type }}
+                            </div>
+                            <div class="form-group">
+                                <label>Status</label> {{ profile_form.status }}
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Gender</label> {{ profile_form.gender }}
+                            </div>
+                            <div class="form-group">
+                                <label>Phone Number</label> {{ profile_form.phone_number }}
+                                <div class="form-hint">Format: +[Country Code][Number] (e.g., +231123456789)</div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Home Address</label> {{ profile_form.home_address }}
+                        </div>
+                    </div>
+
+                    <!-- Hospital Information -->
+                    <div class="form-section">
+                        <h4><i class="fas fa-hospital"></i> Hospital Information</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Hospital Name</label> {{ profile_form.hospital_name }}
+                            </div>
+                            <div class="form-group">
+                                <label>Hospital ID</label> {{ profile_form.hospital_id }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Professional Information - Doctor Specific -->
+                    {% if user_obj.profile.user_type == 'doctor' %}
+                    <div class="form-section">
+                        <h4><i class="fas fa-stethoscope"></i> Professional Information</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Department</label> {{ profile_form.department }}
+                            </div>
+                            <div class="form-group">
+                                <label>Specialization</label> {{ profile_form.specialization }}
+                            </div>
+                        </div>
+                        <div id="custom-specialization-field" style="display: {% if profile_form.specialization.value == 'other' %}block{% else %}none{% endif %};">
+                            <div class="form-group">
+                                <label>Custom Specialization</label> {{ profile_form.custom_specialization }}
+                                <div class="form-hint">Please specify your specialization</div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>License Number</label> {{ profile_form.license_number }}
+                                <div class="form-hint">Medical license number</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Years of Experience</label> {{ profile_form.years_of_experience }}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Availability Status</label> {{ profile_form.availability_status }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- CHW Specific Information -->
+                    {% if user_obj.profile.user_type == 'chw' %}
+                    <div class="form-section">
+                        <h4><i class="fas fa-hand-holding-heart"></i> CHW Information</h4>
+                        <div class="form-group">
+                            <label>Assigned Village</label> {{ profile_form.assigned_village }}
+                            <div class="form-hint">The village where this CHW is assigned</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Permissions -->
+                    <div class="form-section">
+                        <h4><i class="fas fa-lock"></i> Permissions</h4>
+                        <div class="form-row">
+                            <div class="checkbox-group">
+                                {{ profile_form.can_create_patients }}
+                                <label>Create Patients</label>
+                            </div>
+                            <div class="checkbox-group">
+                                {{ profile_form.can_edit_patients }}
+                                <label>Edit Patients</label>
+                            </div>
+                            <div class="checkbox-group">
+                                {{ profile_form.can_delete_patients }}
+                                <label>Delete Patients</label>
+                            </div>
+                            <div class="checkbox-group">
+                                {{ profile_form.can_create_referrals }}
+                                <label>Create Referrals</label>
+                            </div>
+                            <div class="checkbox-group">
+                                {{ profile_form.can_edit_referrals }}
+                                <label>Edit Referrals</label>
+                            </div>
+                            <div class="checkbox-group">
+                                {{ profile_form.can_view_reports }}
+                                <label>View Reports</label>
+                            </div>
+                            <div class="checkbox-group">
+                                {{ profile_form.can_manage_users }}
+                                <label>Manage Users</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> Update User
+                        </button>
+                        <a href="{% url 'user_management:view_user' user_obj.id %}" class="btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const specializationSelect = document.getElementById('{{ profile_form.specialization.id_for_label }}');
+        const customField = document.getElementById('custom-specialization-field');
+
+        function toggleCustomField() {
+            if (specializationSelect && specializationSelect.value === 'other') {
+                customField.style.display = 'block';
+            } else if (customField) {
+                customField.style.display = 'none';
+            }
+        }
+
+        if (specializationSelect) {
+            specializationSelect.addEventListener('change', toggleCustomField);
+            toggleCustomField();
+        }
+    });
+</script>
+{% endblock %}

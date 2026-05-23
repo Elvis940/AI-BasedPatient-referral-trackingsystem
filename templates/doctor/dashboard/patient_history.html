@@ -1,0 +1,268 @@
+{% extends 'doctor/dashboard/base.html' %} {% load static %} {% block title %}Patient History | J.J. Dossen{% endblock %} {% block page_title %}Patient History: {{ patient.full_name }}{% endblock %} {% block extra_css %}
+<style>
+    .patient-header {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border);
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    
+    .patient-avatar-large {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 600;
+        color: white;
+    }
+    
+    .patient-info h2 {
+        font-size: 1.3rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .section-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+    
+    .section-header {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+        font-weight: 600;
+        background: var(--bg-main);
+    }
+    
+    .section-body {
+        padding: 1rem;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .info-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+    }
+    
+    .info-value {
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .referral-item,
+    .assessment-item,
+    .prescription-item {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .referral-item:last-child,
+    .assessment-item:last-child,
+    .prescription-item:last-child {
+        border-bottom: none;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+    }
+    
+    .btn-write {
+        background: var(--primary);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+        .patient-header {
+            flex-direction: column;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %} {% block content %}
+<div class="patient-header">
+    <div class="patient-avatar-large">
+        {{ patient.first_name|first|upper }}{{ patient.last_name|first|upper }}
+    </div>
+    <div class="patient-info">
+        <h2>{{ patient.full_name }}</h2>
+        <p><i class="fas fa-id-card"></i> {{ patient.patient_id }} | <i class="fas fa-calendar"></i> {{ patient.age }} years | <i class="fas fa-venus-mars"></i> {{ patient.get_gender_display }}</p>
+        <p><i class="fas fa-map-marker-alt"></i> {{ patient.village }}, {{ patient.district }}</p>
+        <p><i class="fas fa-phone"></i> {{ patient.phone_number }}</p>
+    </div>
+    <div style="margin-left: auto;">
+        <a href="{% url 'doctor:write_prescription_for_patient' patient.id %}" class="btn-write">
+            <i class="fas fa-prescription-bottle"></i> Write Prescription
+        </a>
+    </div>
+</div>
+
+<div class="section-card">
+    <div class="section-header">
+        <i class="fas fa-heartbeat"></i> Basic Health Information
+    </div>
+    <div class="section-body">
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Blood Pressure</span>
+                <span class="info-value">{{ patient.blood_pressure_display }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Temperature</span>
+                <span class="info-value">{{ patient.temperature_c|default:"Not recorded" }} °C</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Pulse Rate</span>
+                <span class="info-value">{{ patient.pulse_rate|default:"Not recorded" }} bpm</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">BMI</span>
+                <span class="info-value">{{ patient.bmi|default:"Not calculated" }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="section-card">
+    <div class="section-header">
+        <i class="fas fa-notes-medical"></i> Medical History
+    </div>
+    <div class="section-body">
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Known Conditions</span>
+                <span class="info-value">{{ patient.known_conditions|default:"None reported" }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Allergies</span>
+                <span class="info-value">{{ patient.allergies|default:"None known" }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Current Medications</span>
+                <span class="info-value">{{ patient.current_medications|default:"None" }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Past Surgeries</span>
+                <span class="info-value">{{ patient.past_surgeries|default:"None" }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="section-card">
+    <div class="section-header">
+        <i class="fas fa-exchange-alt"></i> Referral History
+    </div>
+    <div class="section-body">
+        {% if referrals %} {% for referral in referrals %}
+        <div class="referral-item">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <div>
+                    <strong>{{ referral.referral_code }}</strong><br>
+                    <small>{{ referral.created_at|date:"M d, Y h:i A" }}</small>
+                </div>
+                <div>
+                    <span class="status-badge" style="background: 
+                            {% if referral.status == 'completed' %}#D1FAE5{% elif referral.status == 'pending' %}#FEF3C7{% else %}#DBEAFE{% endif %};">
+                            {{ referral.get_status_display }}
+                        </span>
+                </div>
+            </div>
+            <div style="margin-top: 0.5rem;">
+                <span><i class="fas fa-stethoscope"></i> {{ referral.get_specialist_display }}</span>
+                <span style="margin-left: 1rem;"><i class="fas fa-flag"></i> {{ referral.get_urgency_display }}</span>
+            </div>
+            {% if referral.notes %}
+            <div style="margin-top: 0.25rem; font-size: 0.75rem; color: var(--text-muted);">{{ referral.notes|truncatechars:100 }}</div>
+            {% endif %}
+        </div>
+        {% endfor %} {% else %}
+        <div style="text-align: center; padding: 1rem;">No referrals found</div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="section-card">
+    <div class="section-header">
+        <i class="fas fa-brain"></i> AI Assessments
+    </div>
+    <div class="section-body">
+        {% if assessments %} {% for assessment in assessments %}
+        <div class="assessment-item">
+            <div style="display: flex; justify-content: space-between;">
+                <strong>{{ assessment.primary_complaint }}</strong>
+                <span class="status-badge" style="background: 
+                        {% if assessment.ai_urgency == 'emergency' %}#FEE2E2{% elif assessment.ai_urgency == 'urgent' %}#FEF3C7{% else %}#D1FAE5{% endif %};">
+                        {{ assessment.get_ai_urgency_display }}
+                    </span>
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ assessment.created_at|date:"M d, Y h:i A" }}</div>
+            <div style="font-size: 0.75rem;">Confidence: {{ assessment.ai_confidence }}%</div>
+        </div>
+        {% endfor %} {% else %}
+        <div style="text-align: center; padding: 1rem;">No AI assessments found</div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="section-card">
+    <div class="section-header">
+        <i class="fas fa-prescription-bottle"></i> Prescriptions
+    </div>
+    <div class="section-body">
+        {% if prescriptions %} {% for prescription in prescriptions %}
+        <div class="prescription-item">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong>Diagnosis: {{ prescription.diagnosis|truncatechars:50 }}</strong><br>
+                    <small>{{ prescription.created_at|date:"M d, Y" }}</small>
+                </div>
+                <div>
+                    <span class="status-badge" style="background: {% if prescription.status == 'active' %}#D1FAE5{% else %}#FEE2E2{% endif %};">
+                            {{ prescription.get_status_display }}
+                        </span>
+                </div>
+            </div>
+            <div style="margin-top: 0.5rem; font-size: 0.75rem;">
+                <strong>Medications:</strong> {{ prescription.medications|truncatechars:100 }}
+            </div>
+        </div>
+        {% endfor %} {% else %}
+        <div style="text-align: center; padding: 1rem;">No prescriptions found</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

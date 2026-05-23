@@ -1,0 +1,194 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}J.J. Dossen Admin Dashboard{% endblock %}</title>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/adminapp/base.css' %}"> {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="{% url 'adminapp:admin_dashboard' %}" class="logo">
+                <i class="fas fa-heartbeat"></i>
+                <div>
+                    <h2>J.J. Dossen</h2>
+                    <p>Patient Tracking System</p>
+                </div>
+            </a>
+        </div>
+
+        <div class="sidebar-nav">
+            <!-- Main Navigation -->
+            <div class="nav-section">
+                <div class="nav-section-title">Main</div>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="{% url 'adminapp:admin_dashboard' %}" class="nav-link" id="nav-dashboard">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- User Management -->
+            <div class="nav-section">
+                <div class="nav-section-title">User Management</div>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="{% url 'user_management:all_users' %}" class="nav-link" id="nav-users">
+                            <i class="fas fa-users"></i>
+                            <span>All Users</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'user_management:add_user' %}" class="nav-link" id="nav-add-user">
+                            <i class="fas fa-user-plus"></i>
+                            <span>Add New User</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'user_management:roles_permissions' %}" class="nav-link" id="nav-roles">
+                            <i class="fas fa-user-tag"></i>
+                            <span>Roles & Permissions</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Referrals -->
+            <div class="nav-section">
+                <div class="nav-section-title">Referrals</div>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="{% url 'adminapp:admin_all_referrals' %}" class="nav-link" id="nav-referrals">
+                            <i class="fas fa-exchange-alt"></i>
+                            <span>All Referrals</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Tracking & Alerts -->
+            <div class="nav-section">
+                <div class="nav-section-title">Patient Tracking</div>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="{% url 'adminapp:lost_patients' %}" class="nav-link" id="nav-lost-patients">
+                            <i class="fas fa-user-slash"></i>
+                            <span>Lost Patients</span>
+                            <span class="badge" id="lostCount">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'adminapp:overdue_followups' %}" class="nav-link" id="nav-overdue">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>Overdue Follow-ups</span>
+                            <span class="badge" id="overdueCount">0</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <!-- Communications -->
+            <div class="nav-section">
+                <div class="nav-section-title">Communications</div>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="{% url 'adminapp:all_communications' %}" class="nav-link" id="nav-comms">
+                            <i class="fas fa-comments"></i>
+                            <span>Doctor-CHW Comms</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="user-details">
+                    <div class="user-name">{{ user.get_full_name|default:user.username }}</div>
+                    <div class="user-role">Administrator</div>
+                </div>
+            </div>
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="top-header">
+            <div class="header-left">
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+            </div>
+            <div class="header-right">
+                <button class="notification-btn" id="notificationBtn">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge" id="notificationBadge">0</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="content-area">
+            {% block content %} {% endblock %}
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="{% static 'js/adminapp/base.js' %}"></script>
+    <script>
+        // Get pending referrals count for badge
+        fetch("{% url 'adminapp:admin_pending_count_api' %}")
+            .then(response => response.json())
+            .then(data => {
+                const pendingBadge = document.getElementById('pendingCount');
+                if (pendingBadge) pendingBadge.textContent = data.count || 0;
+            })
+            .catch(error => console.error('Error fetching pending count:', error));
+
+        // Get lost patients count
+        fetch("{% url 'adminapp:lost_patients_count_api' %}")
+            .then(response => response.json())
+            .then(data => {
+                const lostCount = document.getElementById('lostCount');
+                if (lostCount) lostCount.textContent = data.count || 0;
+            })
+            .catch(error => console.error('Error fetching lost count:', error));
+
+        // Get overdue follow-ups count
+        fetch("{% url 'adminapp:overdue_count_api' %}")
+            .then(response => response.json())
+            .then(data => {
+                const overdueCount = document.getElementById('overdueCount');
+                if (overdueCount) overdueCount.textContent = data.count || 0;
+            })
+            .catch(error => console.error('Error fetching overdue count:', error));
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

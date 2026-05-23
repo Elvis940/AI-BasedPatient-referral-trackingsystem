@@ -1,0 +1,136 @@
+<!-- templates/doctor/dashboard/send_chw_update.html -->
+{% extends 'doctor/dashboard/base.html' %} {% load static %} {% block title %}Send Update to CHW | J.J. Dossen{% endblock %} {% block page_title %}Send Patient Update to CHW{% endblock %} {% block extra_css %}
+<style>
+    .update-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border: 1px solid var(--border);
+    }
+    
+    .patient-info {
+        background: var(--bg-main);
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-control,
+    select.form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg-main);
+        color: var(--text-primary);
+    }
+    
+    .priority-high {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+    
+    .priority-medium {
+        background: #FEF3C7;
+        color: #D97706;
+    }
+    
+    .priority-low {
+        background: #DBEAFE;
+        color: #2563EB;
+    }
+    
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+    }
+    
+    .btn-secondary {
+        background: var(--hover-bg);
+        color: var(--text-primary);
+        padding: 0.75rem 1.5rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        text-decoration: none;
+        margin-left: 1rem;
+    }
+</style>
+{% endblock %} {% block content %}
+<div class="update-card">
+    <div class="patient-info">
+        <h4>Patient Information</h4>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-top: 0.5rem;">
+            <div><strong>Name:</strong> {{ referral.patient.full_name }}</div>
+            <div><strong>Patient ID:</strong> {{ referral.patient.patient_id }}</div>
+            <div><strong>Referral Code:</strong> {{ referral.referral_code }}</div>
+            <div><strong>CHW:</strong> {{ referral.chw.get_full_name|default:referral.chw.username }}</div>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label>Communication Type</label>
+            <select name="communication_type" class="form-control" required>
+                <option value="treatment_update">Treatment Update</option>
+                <option value="medication_issue">Medication Issue</option>
+                <option value="follow_up_needed">Follow-up Needed</option>
+                <option value="emergency_alert">Emergency Alert</option>
+                <option value="general">General Message</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Priority</label>
+            <select name="priority" class="form-control" required>
+                <option value="high">High Priority - Immediate Action Required</option>
+                <option value="medium" selected>Medium Priority - Action Needed Soon</option>
+                <option value="low">Low Priority - Informational Only</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Subject</label>
+            <input type="text" name="subject" class="form-control" placeholder="e.g., Update on John's treatment progress" required>
+        </div>
+
+        <div class="form-group">
+            <label>Message</label>
+            <textarea name="message" class="form-control" rows="6" placeholder="Provide detailed update about the patient..." required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="requires_action">
+                Require CHW to take action on this update
+            </label>
+        </div>
+
+        <div style="margin-top: 1.5rem;">
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-paper-plane"></i> Send Update to CHW
+            </button>
+            <a href="{% url 'doctor:view_referral' referral.id %}" class="btn-secondary">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

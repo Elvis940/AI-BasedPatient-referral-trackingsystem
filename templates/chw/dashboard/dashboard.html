@@ -1,0 +1,447 @@
+{% extends 'chw/dashboard/base.html' %} {% load static %} {% block title %}CHW Dashboard | J.J. Dossen{% endblock %} {% block page_title %}Dashboard{% endblock %} {% block extra_css %}
+<style>
+    /* Welcome Banner */
+    
+    .welcome-banner {
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .welcome-banner::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+        background-size: 30px 30px;
+        animation: moveBg 20s linear infinite;
+    }
+    
+    @keyframes moveBg {
+        0% {
+            transform: translate(0, 0);
+        }
+        100% {
+            transform: translate(-50px, -50px);
+        }
+    }
+    
+    .welcome-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .welcome-banner h2 {
+        font-size: 1.3rem;
+        margin-bottom: 0.3rem;
+    }
+    
+    .welcome-banner p {
+        opacity: 0.9;
+        font-size: 0.85rem;
+    }
+    
+    .ai-status {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.2rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        margin-top: 0.5rem;
+    }
+    /* Stats Grid */
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 1rem;
+        border: 1px solid var(--border);
+        transition: all 0.3s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 0.75rem;
+    }
+    
+    .stat-icon.primary {
+        background: rgba(37, 99, 235, 0.1);
+        color: var(--primary);
+    }
+    
+    .stat-icon.success {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+    
+    .stat-icon.danger {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+    
+    .stat-icon.info {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--info);
+    }
+    
+    .stat-icon.warning {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+    }
+    
+    .stat-number {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1;
+    }
+    
+    .stat-label {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+        margin-top: 0.25rem;
+    }
+    /* Cards */
+    
+    .card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+    
+    .card-header {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+        font-weight: 600;
+        font-size: 0.9rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    /* Patient Lists */
+    
+    .patient-list {
+        list-style: none;
+    }
+    
+    .patient-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .patient-item:last-child {
+        border-bottom: none;
+    }
+    
+    .patient-name {
+        font-weight: 500;
+        font-size: 0.85rem;
+    }
+    
+    .patient-detail {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+    /* Badges */
+    
+    .badge {
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.65rem;
+        font-weight: 500;
+    }
+    
+    .badge-pending_admin {
+        background: #FEF3C7;
+        color: #D97706;
+    }
+    
+    .badge-approved {
+        background: #DBEAFE;
+        color: #2563EB;
+    }
+    
+    .badge-rejected {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+    
+    .badge-completed {
+        background: #D1FAE5;
+        color: #059669;
+    }
+    
+    .badge-emergency {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+    
+    .badge-urgent {
+        background: #FEF3C7;
+        color: #D97706;
+    }
+    
+    .badge-high-risk {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+    /* Buttons */
+    
+    .btn-outline {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+    }
+    
+    .btn-outline:hover {
+        background: var(--hover-bg);
+        color: var(--primary);
+        border-color: var(--primary);
+    }
+    /* Grid */
+    
+    .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    /* Confidence Bar */
+    
+    .confidence-bar {
+        height: 4px;
+        background: var(--border);
+        border-radius: 2px;
+        overflow: hidden;
+        margin: 0.5rem 0;
+    }
+    
+    .confidence-fill {
+        height: 100%;
+        border-radius: 2px;
+    }
+    
+    .confidence-fill.high {
+        background: var(--danger);
+    }
+    
+    .confidence-fill.medium {
+        background: var(--warning);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+    }
+    
+    .empty-state i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .grid-2 {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %} {% block content %}
+<!-- Welcome Banner -->
+<div class="welcome-banner">
+    <div class="welcome-content">
+        <h2>Welcome, {{ user.get_full_name|default:user.username }}! 👋</h2>
+        <p><i class="fas fa-map-marker-alt"></i> Assigned Village: <strong>{{ user.profile.assigned_village|default:"Not assigned" }}</strong></p>
+        <p><i class="fas fa-calendar"></i> Today is {{ current_date|date:"l, F d, Y" }}</p>
+        <div class="ai-status">
+            <i class="fas fa-brain"></i> AI Assistant Active | Connected to J.J. Dossen Hospital
+        </div>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon primary">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-number">{{ total_patients }}</div>
+        <div class="stat-label">Total Patients</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon danger">
+            <i class="fas fa-bell"></i>
+        </div>
+        <div class="stat-number">{{ emergency_assessments }}</div>
+        <div class="stat-label">Emergency Cases</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon warning">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-number">{{ pending_referrals }}</div>
+        <div class="stat-label">Pending Referrals</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon success">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-number">{{ completed_referrals }}</div>
+        <div class="stat-label">Completed Referrals</div>
+    </div>
+</div>
+
+<!-- Two Column Layout -->
+<div class="grid-2">
+    <!-- Recent Referrals -->
+    <div class="card">
+        <div class="card-header">
+            <span><i class="fas fa-exchange-alt"></i> Recent Referrals</span>
+            <span class="badge badge-pending_admin">{{ pending_referrals }} Pending</span>
+        </div>
+        <div class="card-body">
+            {% if recent_referrals %}
+            <ul class="patient-list">
+                {% for referral in recent_referrals %}
+                <li class="patient-item">
+                    <div>
+                        <div class="patient-name">{{ referral.patient_name }}</div>
+                        <div class="patient-detail">
+                            {{ referral.specialist }} · {{ referral.created_at|date:"M d, Y" }}
+                        </div>
+                        <div class="patient-detail">
+                            Status:
+                            <span class="badge badge-{{ referral.status }}">
+                                {{ referral.status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    <a href="{% url 'referrals:referral_detail' referral.id %}" class="btn-outline" style="padding: 0.3rem 0.8rem;">
+                        View
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            <a href="{% url 'referrals:referral_list' %}" class="btn-outline" style="margin-top: 0.5rem; width: 100%; text-align: center;">
+                View All Referrals ({{ total_referrals }})
+            </a> {% else %}
+            <div class="empty-state">
+                <i class="fas fa-exchange-alt"></i>
+                <p>No referrals yet</p>
+                <a href="{% url 'patients:all_patients' %}" class="btn-outline">Start a Referral</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- AI Risk Predictions -->
+    <div class="card">
+        <div class="card-header">
+            <span><i class="fas fa-chart-line"></i> AI Risk Predictions</span>
+            <span class="badge badge-high-risk">High Risk: {{ high_risk_patients|length }}</span>
+        </div>
+        <div class="card-body">
+            {% if high_risk_patients %}
+            <ul class="patient-list">
+                {% for patient in high_risk_patients %}
+                <li class="patient-item">
+                    <div>
+                        <div class="patient-name">{{ patient.name }}</div>
+                        <div class="patient-detail">{{ patient.condition|truncatechars:40 }}</div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill high" style="width: {{ patient.confidence }}%"></div>
+                        </div>
+                    </div>
+                    <span class="badge badge-high-risk">{{ patient.confidence }}% Risk</span>
+                </li>
+                {% endfor %}
+            </ul>
+            <a href="{% url 'ai_assessment:all_assessments' %}" class="btn-outline" style="margin-top: 0.5rem; width: 100%; text-align: center;">
+                View All Assessments ({{ total_assessments }})
+            </a> {% else %}
+            <div class="empty-state">
+                <i class="fas fa-brain"></i>
+                <p>No AI assessments yet</p>
+                <a href="{% url 'patients:all_patients' %}" class="btn-outline">Run AI Assessment</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Today's Schedule / Follow-ups -->
+<div class="card">
+    <div class="card-header">
+        <span><i class="fas fa-calendar-alt"></i> Follow-ups & Schedule</span>
+        <span>{{ follow_up_patients|length }} pending</span>
+    </div>
+    <div class="card-body">
+        {% if follow_up_patients %}
+        <ul class="patient-list">
+            {% for patient in follow_up_patients %}
+            <li class="patient-item">
+                <div>
+                    <div class="patient-name">{{ patient.full_name }}</div>
+                    <div class="patient-detail">
+                        Last visit: {{ patient.last_visit|date:"M d, Y"|default:"Never" }} · Village: {{ patient.village }}
+                    </div>
+                </div>
+                <a href="{% url 'patients:view_patient' patient.id %}" class="btn-outline" style="padding: 0.3rem 0.8rem;">
+                    View
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-calendar-check"></i>
+            <p>No pending follow-ups</p>
+        </div>
+        {% endif %}
+        <a href="{% url 'patients:all_patients' %}" class="btn-outline" style="margin-top: 0.5rem; width: 100%; text-align: center;">
+            View All Patients
+        </a>
+    </div>
+</div>
+{% endblock %}

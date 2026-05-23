@@ -1,0 +1,201 @@
+{% extends 'chw/dashboard/base.html' %} {% load static %} {% block title %}Referrals | J.J. Dossen{% endblock %} {% block page_title %}Referrals{% endblock %} {% block extra_css %}
+<style>
+    .stats-bar {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .stat-pill {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border);
+    }
+    
+    .stat-pill .number {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+    
+    .stat-pill .label {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+    }
+    
+    .filter-bar {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border);
+    }
+    
+    .filter-form {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+    
+    .filter-group {
+        flex: 1;
+        min-width: 120px;
+    }
+    
+    .filter-group label {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        color: var(--text-secondary);
+    }
+    
+    .filter-group select,
+    .filter-group input {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 0.8rem;
+    }
+    
+    .referrals-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--bg-card);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .referrals-table th {
+        padding: 0.75rem 1rem;
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        background: var(--bg-main);
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .referrals-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.8rem;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+    
+    .status-pending {
+        background: #FEF3C7;
+        color: #D97706;
+    }
+    
+    .status-accepted {
+        background: #DBEAFE;
+        color: #2563EB;
+    }
+    
+    .status-in_progress {
+        background: #E0E7FF;
+        color: #4338CA;
+    }
+    
+    .status-completed {
+        background: #D1FAE5;
+        color: #059669;
+    }
+    
+    .status-cancelled {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+    
+    .btn-link {
+        color: var(--primary);
+        text-decoration: none;
+    }
+</style>
+{% endblock %} {% block content %}
+<!-- Stats Bar -->
+<div class="stats-bar">
+    <div class="stat-pill">
+        <span class="number">{{ total_count }}</span>
+        <span class="label">Total Referrals</span>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="filter-bar">
+    <form method="get" class="filter-form">
+        <div class="filter-group">
+            <label>Status</label>
+            <select name="status">
+                <option value="">All</option>
+                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="accepted" {% if status_filter == 'accepted' %}selected{% endif %}>Accepted</option>
+                <option value="in_progress" {% if status_filter == 'in_progress' %}selected{% endif %}>In Progress</option>
+                <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Date Range</label>
+            <select name="date_range">
+                <option value="">All Time</option>
+                <option value="today" {% if date_range == 'today' %}selected{% endif %}>Today</option>
+                <option value="week" {% if date_range == 'week' %}selected{% endif %}>Last 7 Days</option>
+                <option value="month" {% if date_range == 'month' %}selected{% endif %}>Last 30 Days</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Search</label>
+            <input type="text" name="search" placeholder="Patient name or code" value="{{ search }}">
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn-filter btn-filter-primary">Filter</button>
+            <a href="{% url 'referrals:referral_list' %}" class="btn-filter btn-filter-secondary">Reset</a>
+        </div>
+    </form>
+</div>
+
+<!-- Referrals Table -->
+<table class="referrals-table">
+    <thead>
+        <tr>
+            <th>Code</th>
+            <th>Patient</th>
+            <th>Urgency</th>
+            <th>Specialist</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for referral in referrals %}
+        <tr>
+            <td>{{ referral.referral_code }}</td>
+            <td>{{ referral.patient.full_name }}</td>
+            <td><span class="status-badge status-{{ referral.urgency }}">{{ referral.get_urgency_display }}</span></td>
+            <td>{{ referral.get_specialist_display }}</td>
+            <td><span class="status-badge status-{{ referral.status }}">{{ referral.get_status_display }}</span></td>
+            <td>{{ referral.created_at|date:"M d, Y" }}</td>
+            <td><a href="{% url 'referrals:referral_detail' referral.id %}" class="btn-link">View</a></td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" style="text-align:center; padding:2rem;">No referrals found</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

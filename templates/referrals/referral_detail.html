@@ -1,0 +1,739 @@
+{% extends 'chw/dashboard/base.html' %} {% load static %} {% block title %}Referral Details | J.J. Dossen{% endblock %} {% block page_title %}Referral Details: {{ referral.referral_code }}{% endblock %} {% block extra_css %}
+<style>
+    .detail-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        border: 1px solid var(--border);
+    }
+    
+    .detail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .status-pending_admin,
+    .status-pending {
+        background: #FEF3C7;
+        color: #D97706;
+    }
+    
+    .status-approved,
+    .status-accepted {
+        background: #DBEAFE;
+        color: #2563EB;
+    }
+    
+    .status-in_progress {
+        background: #E0E7FF;
+        color: #4338CA;
+    }
+    
+    .status-completed {
+        background: #D1FAE5;
+        color: #059669;
+    }
+    
+    .status-cancelled {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+    
+    .status-active {
+        background: #D1FAE5;
+        color: #059669;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .info-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+    }
+    
+    .info-value {
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .activity-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .activity-item {
+        display: flex;
+        gap: 1rem;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .activity-icon {
+        width: 32px;
+        height: 32px;
+        background: var(--bg-main);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .activity-detail {
+        flex: 1;
+    }
+    
+    .activity-text {
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .activity-time {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+    }
+    
+    .medication-item {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-main);
+        margin-bottom: 0.5rem;
+        border-radius: 10px;
+    }
+    
+    .medication-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+    
+    .medication-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--primary);
+    }
+    
+    .prescription-item {
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        background: var(--bg-main);
+        border-radius: 10px;
+        border-left: 3px solid var(--primary);
+    }
+    
+    .badge-prescription {
+        background: #8B5CF6;
+        color: white;
+        padding: 0.2rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.65rem;
+        display: inline-block;
+    }
+    
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+    }
+    
+    .btn-danger {
+        background: var(--danger);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: none;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .btn-danger:hover {
+        background: #DC2626;
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background: var(--hover-bg);
+        color: var(--text-secondary);
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        text-decoration: none;
+        border: 1px solid var(--border);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+    }
+    
+    .btn-secondary:hover {
+        background: var(--border);
+        color: var(--text-primary);
+    }
+    
+    .btn-success {
+        background: var(--success);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .btn-success:hover {
+        background: #059669;
+        transform: translateY(-1px);
+    }
+    
+    .form-control {
+        padding: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+    }
+    
+    .empty-state i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .debug-section {
+        background: #FEF3C7;
+        border: 2px solid #D97706;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .debug-section summary {
+        cursor: pointer;
+        font-weight: bold;
+        color: #D97706;
+    }
+    /* Delete Modal */
+    
+    .delete-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .delete-modal.active {
+        display: flex;
+    }
+    
+    .delete-modal-content {
+        background: var(--bg-card);
+        border-radius: 20px;
+        max-width: 400px;
+        width: 90%;
+        padding: 1.5rem;
+        text-align: center;
+        animation: modalSlideIn 0.3s ease;
+    }
+    
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .delete-modal-icon {
+        width: 60px;
+        height: 60px;
+        background: rgba(239, 68, 68, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        color: var(--danger);
+        font-size: 2rem;
+    }
+    
+    .delete-modal-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .delete-modal-message {
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+    }
+    
+    .delete-modal-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+    
+    .delete-modal-btn {
+        padding: 0.5rem 1.5rem;
+        border-radius: 10px;
+        border: none;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .delete-modal-btn-confirm {
+        background: var(--danger);
+        color: white;
+    }
+    
+    .delete-modal-btn-confirm:hover {
+        background: #DC2626;
+        transform: translateY(-1px);
+    }
+    
+    .delete-modal-btn-cancel {
+        background: var(--hover-bg);
+        color: var(--text-secondary);
+    }
+    
+    .delete-modal-btn-cancel:hover {
+        background: var(--border);
+    }
+    
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+        .detail-header {
+            flex-direction: column;
+            gap: 0.5rem;
+            text-align: center;
+        }
+        .action-buttons {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %} {% block content %}
+<!-- DEBUG SECTION - Shows what data is available -->
+<div class="debug-section">
+    <details>
+        <summary>🔧 Debug Information (Click to expand)</summary>
+        <div style="margin-top: 0.75rem; font-size: 0.85rem;">
+            <p><strong>Referral Code:</strong> {{ referral.referral_code }}</p>
+            <p><strong>Referral Status:</strong> {{ referral.status }}</p>
+            <p><strong>Medications Count:</strong> {{ medications|length }}</p>
+            <p><strong>Prescriptions Count:</strong> {{ prescriptions|length }}</p>
+            <p><strong>User Type:</strong> {{ user_type }}</p>
+            {% if medications %}
+            <p><strong style="color: green;">✓ Medications Found:</strong></p>
+            <ul>
+                {% for med in medications %}
+                <li><strong>{{ med.medication_name }}</strong> - {{ med.dosage }} ({{ med.status }})</li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p><strong style="color: red;">⚠️ No medications found in context!</strong></p>
+            {% endif %}
+        </div>
+    </details>
+</div>
+
+<!-- Main Details Card -->
+<div class="detail-card">
+    <div class="detail-header">
+        <div>
+            <strong>Referral Code:</strong> {{ referral.referral_code }}
+        </div>
+        <div>
+            <span class="status-badge status-{{ referral.status }}">
+                {{ referral.get_status_display }}
+            </span>
+        </div>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-item">
+            <span class="info-label">Patient Name</span>
+            <span class="info-value">{{ referral.patient.full_name }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Patient ID</span>
+            <span class="info-value">{{ referral.patient.patient_id }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Urgency</span>
+            <span class="info-value">{{ referral.get_urgency_display }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Specialist</span>
+            <span class="info-value">{{ referral.get_specialist_display }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Created By</span>
+            <span class="info-value">{{ referral.chw.get_full_name|default:referral.chw.username }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Created Date</span>
+            <span class="info-value">{{ referral.created_at|date:"M d, Y h:i A" }}</span>
+        </div>
+        {% if referral.doctor %}
+        <div class="info-item">
+            <span class="info-label">Assigned Doctor</span>
+            <span class="info-value">{{ referral.doctor.get_full_name }}</span>
+        </div>
+        {% endif %} {% if referral.scheduled_date %}
+        <div class="info-item">
+            <span class="info-label">Scheduled Date</span>
+            <span class="info-value">{{ referral.scheduled_date|date:"M d, Y h:i A" }}</span>
+        </div>
+        {% endif %} {% if referral.check_in_time %}
+        <div class="info-item">
+            <span class="info-label">Check In Time</span>
+            <span class="info-value">{{ referral.check_in_time|date:"M d, Y h:i A" }}</span>
+        </div>
+        {% endif %} {% if referral.check_out_time %}
+        <div class="info-item">
+            <span class="info-label">Check Out Time</span>
+            <span class="info-value">{{ referral.check_out_time|date:"M d, Y h:i A" }}</span>
+        </div>
+        {% endif %} {% if referral.completed_at %}
+        <div class="info-item">
+            <span class="info-label">Completed Date</span>
+            <span class="info-value">{{ referral.completed_at|date:"M d, Y h:i A" }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if referral.notes %}
+    <div style="margin-top: 1rem;">
+        <span class="info-label">Notes</span>
+        <p style="margin-top: 0.25rem;">{{ referral.notes }}</p>
+    </div>
+    {% endif %} {% if referral.rejection_reason %}
+    <div style="margin-top: 1rem;">
+        <span class="info-label" style="color: var(--danger);">Rejection Reason</span>
+        <p style="margin-top: 0.25rem; color: var(--danger);">{{ referral.rejection_reason }}</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Prescribed Medications Section -->
+<div class="detail-card">
+    <div class="detail-header">
+        <strong><i class="fas fa-pills"></i> Prescribed Medications</strong> {% if user_type == 'doctor' and referral.status != 'completed' %}
+        <a href="{% url 'referrals:add_medication' referral.id %}" class="btn-primary" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;">
+            <i class="fas fa-plus-circle"></i> Add Medication
+        </a>
+        {% endif %}
+    </div>
+
+    {% if medications %} {% for med in medications %}
+    <div class="medication-item">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap;">
+            <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+                    <span class="medication-name">{{ med.medication_name }}</span>
+                    <span class="status-badge status-{{ med.status }}">{{ med.get_status_display }}</span>
+                </div>
+                <div style="font-size: 0.85rem; margin-top: 0.25rem;">
+                    💊 <strong>Dosage:</strong> {{ med.dosage }}<br> ⏰ <strong>Frequency:</strong> {{ med.frequency }}<br> 📅 <strong>Duration:</strong> {{ med.duration_days }} days
+                </div>
+                {% if med.instructions %}
+                <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-secondary);">
+                    <i class="fas fa-info-circle"></i> {{ med.instructions }}
+                </div>
+                {% endif %}
+                <div style="margin-top: 0.5rem; font-size: 0.7rem; color: var(--text-muted);">
+                    <i class="fas fa-user-md"></i> Prescribed by: Dr. {{ med.prescribed_by.get_full_name|default:"Unknown" }}<br>
+                    <i class="fas fa-calendar-alt"></i> Prescribed on: {{ med.prescribed_at|date:"M d, Y H:i" }}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %} {% else %}
+    <div class="empty-state">
+        <i class="fas fa-pills"></i>
+        <p>No medications have been prescribed yet.</p>
+        <small class="text-muted">Once the doctor prescribes medication, it will appear here.</small>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Prescriptions Section (from doctor.models) -->
+{% if prescriptions %}
+<div class="detail-card">
+    <div class="detail-header">
+        <strong><i class="fas fa-file-prescription"></i> Full Prescriptions</strong>
+    </div>
+    {% for pres in prescriptions %}
+    <div class="prescription-item">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap;">
+            <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+                    <strong>Prescription #{{ pres.id }}</strong>
+                    <span class="badge-prescription">Full Prescription</span>
+                    <span class="status-badge status-{{ pres.status }}">{{ pres.get_status_display }}</span>
+                </div>
+                <div style="font-size: 0.85rem;">
+                    📝 <strong>Diagnosis:</strong> {{ pres.diagnosis }}<br> 💊 <strong>Medications:</strong> {{ pres.medications }}<br> 📅 <strong>Duration:</strong> {{ pres.duration_days }} days
+                </div>
+                {% if pres.instructions %}
+                <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-secondary);">
+                    <i class="fas fa-info-circle"></i> {{ pres.instructions }}
+                </div>
+                {% endif %}
+                <div style="margin-top: 0.5rem; font-size: 0.7rem; color: var(--text-muted);">
+                    <i class="fas fa-user-md"></i> Prescribed by: Dr. {{ pres.doctor.get_full_name }}<br>
+                    <i class="fas fa-calendar-alt"></i> Prescribed on: {{ pres.created_at|date:"M d, Y H:i" }}
+                </div>
+                {% if pres.follow_up_required %}
+                <div style="margin-top: 0.25rem; font-size: 0.7rem; color: var(--warning);">
+                    <i class="fas fa-calendar-check"></i> Follow-up required
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Status Update Section (for Doctors) -->
+{% if available_statuses %}
+<div class="detail-card">
+    <div class="detail-header">
+        <strong>Update Status</strong>
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+            <div style="flex: 1;">
+                <label class="info-label">New Status</label>
+                <select name="status" class="form-control" style="width: 100%; padding: 0.5rem;">
+                    {% for status in available_statuses %}
+                    <option value="{{ status }}">{{ status|title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="flex: 2;">
+                <label class="info-label">Notes (Optional)</label>
+                <input type="text" name="notes" class="form-control" placeholder="Add update notes..." style="width: 100%; padding: 0.5rem;">
+            </div>
+            <div>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i> Update Status
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endif %}
+
+<!-- Action Buttons -->
+<div class="detail-card">
+    <div class="detail-header">
+        <strong>Actions</strong>
+    </div>
+    <div class="action-buttons">
+        {% if user_type == 'doctor' %} {% if referral.status == 'pending' or referral.status == 'pending_admin' %}
+        <form method="post" action="{% url 'referrals:update_referral_status' referral.id %}" style="display: inline;">
+            {% csrf_token %}
+            <input type="hidden" name="status" value="accepted">
+            <input type="hidden" name="notes" value="Referral accepted by doctor">
+            <button type="submit" class="btn-success" onclick="return confirm('Accept this referral?')">
+                    <i class="fas fa-check-circle"></i> Accept Referral
+                </button>
+        </form>
+        {% endif %} {% if referral.status == 'accepted' %}
+        <form method="post" action="{% url 'referrals:update_referral_status' referral.id %}" style="display: inline;">
+            {% csrf_token %}
+            <input type="hidden" name="status" value="in_progress">
+            <input type="hidden" name="notes" value="Treatment started by doctor">
+            <button type="submit" class="btn-primary" onclick="return confirm('Start treatment for this patient?')">
+                    <i class="fas fa-play-circle"></i> Start Treatment
+                </button>
+        </form>
+        {% endif %} {% if referral.status == 'in_progress' %}
+        <form method="post" action="{% url 'referrals:update_referral_status' referral.id %}" style="display: inline;">
+            {% csrf_token %}
+            <input type="hidden" name="status" value="completed">
+            <input type="hidden" name="notes" value="Treatment completed by doctor">
+            <button type="submit" class="btn-success" onclick="return confirm('Mark this referral as completed?')">
+                    <i class="fas fa-check-double"></i> Mark Complete
+                </button>
+        </form>
+        {% endif %} {% if referral.status == 'pending' or referral.status == 'pending_admin' or referral.status == 'accepted' %}
+        <button class="btn-danger" id="deleteReferralBtn">
+                <i class="fas fa-times"></i> Cancel Referral
+            </button> {% endif %} {% elif user_type == 'chw' %} {% if referral.status != 'completed' and referral.status != 'cancelled' and referral.status != 'rejected' %}
+        <button class="btn-danger" id="deleteReferralBtn">
+                <i class="fas fa-times"></i> Cancel Referral
+            </button> {% endif %} {% else %}
+        <button class="btn-danger" id="deleteReferralBtn">
+                <i class="fas fa-trash"></i> Delete Referral
+            </button> {% endif %}
+
+        <!-- Back button based on user type -->
+        {% if user_type == 'doctor' %}
+        <a href="{% url 'doctor:pending_referrals' %}" class="btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Referrals
+        </a>
+        {% else %}
+        <a href="{% url 'referrals:referral_list' %}" class="btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Referrals
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Activity Timeline -->
+<div class="detail-card">
+    <div class="detail-header">
+        <strong><i class="fas fa-history"></i> Activity Timeline</strong>
+    </div>
+    <ul class="activity-list">
+        {% for activity in referral.activities.all %}
+        <li class="activity-item">
+            <div class="activity-icon">
+                <i class="fas 
+                    {% if activity.activity_type == 'created' %}fa-plus-circle
+                    {% elif activity.activity_type == 'approved' %}fa-check-circle
+                    {% elif activity.activity_type == 'accepted' %}fa-user-check
+                    {% elif activity.activity_type == 'in_progress' %}fa-play-circle
+                    {% elif activity.activity_type == 'completed' %}fa-flag-checkered
+                    {% elif activity.activity_type == 'cancelled' %}fa-times-circle
+                    {% elif activity.activity_type == 'rejected' %}fa-ban
+                    {% else %}fa-clock{% endif %}">
+                </i>
+            </div>
+            <div class="activity-detail">
+                <div class="activity-text">{{ activity.get_activity_type_display }}</div>
+                <div class="activity-time">
+                    {{ activity.timestamp|date:"M d, Y h:i A" }} by {{ activity.performed_by.get_full_name|default:activity.performed_by.username }}
+                </div>
+                {% if activity.description %}
+                <div class="activity-time" style="margin-top: 0.25rem;">{{ activity.description }}</div>
+                {% endif %}
+            </div>
+        </li>
+        {% empty %}
+        <li class="activity-item">No activities recorded yet</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="delete-modal">
+    <div class="delete-modal-content">
+        <div class="delete-modal-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h3 class="delete-modal-title">{% if user_type == 'doctor' %}Cancel Referral{% else %}Delete Referral{% endif %}</h3>
+        <p class="delete-modal-message">
+            Are you sure you want to {% if user_type == 'doctor' %}cancel{% else %}delete{% endif %} referral <strong>{{ referral.referral_code }}</strong>?<br> This action cannot be undone.
+        </p>
+        <div class="delete-modal-buttons">
+            <form method="post" action="{% url 'referrals:delete_referral' referral.id %}">
+                {% csrf_token %}
+                <button type="submit" class="delete-modal-btn delete-modal-btn-confirm">
+                    <i class="fas fa-trash"></i> Yes, {% if user_type == 'doctor' %}Cancel{% else %}Delete{% endif %}
+                </button>
+            </form>
+            <button class="delete-modal-btn delete-modal-btn-cancel" id="cancelDeleteBtn">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Delete modal functionality
+    const deleteModal = document.getElementById('deleteModal');
+    const deleteBtn = document.getElementById('deleteReferralBtn');
+    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            deleteModal.classList.add('active');
+        });
+    }
+
+    if (cancelDeleteBtn) {
+        cancelDeleteBtn.addEventListener('click', function() {
+            deleteModal.classList.remove('active');
+        });
+    }
+
+    // Close modal when clicking outside
+    if (deleteModal) {
+        deleteModal.addEventListener('click', function(e) {
+            if (e.target === deleteModal) {
+                deleteModal.classList.remove('active');
+            }
+        });
+    }
+</script>
+{% endblock %}

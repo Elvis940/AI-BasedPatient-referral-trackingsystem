@@ -1,0 +1,386 @@
+{% extends 'doctor/dashboard/base.html' %} {% load static %} {% block title %}{{ title }} | J.J. Dossen{% endblock %} {% block page_title %}{{ title }}{% endblock %} {% block extra_css %}
+<style>
+    .stats-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border);
+    }
+    
+    .stats-number {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+    
+    .filter-bar {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border);
+    }
+    
+    .filter-form {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+    
+    .filter-group {
+        flex: 1;
+        min-width: 150px;
+    }
+    
+    .filter-group label {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        color: var(--text-secondary);
+    }
+    
+    .filter-group input,
+    .filter-group select {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .filter-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .btn-filter {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s;
+    }
+    
+    .btn-filter-primary {
+        background: var(--primary);
+        color: white;
+    }
+    
+    .btn-filter-primary:hover {
+        background: var(--primary-dark);
+    }
+    
+    .btn-filter-secondary {
+        background: var(--hover-bg);
+        color: var(--text-secondary);
+    }
+    
+    .btn-filter-secondary:hover {
+        background: var(--border);
+    }
+    
+    .referrals-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--bg-card);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .referrals-table th {
+        padding: 0.75rem 1rem;
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        background: var(--bg-main);
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .referrals-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.8rem;
+    }
+    
+    .referrals-table tr:hover {
+        background: var(--hover-bg);
+    }
+    
+    .referral-code {
+        font-family: monospace;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--primary);
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .action-btn-view {
+        background: var(--info);
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 0.7rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .action-btn-view:hover {
+        background: #2563EB;
+        transform: translateY(-1px);
+    }
+    
+    .action-btn-complete {
+        background: var(--success);
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .action-btn-complete:hover {
+        background: #059669;
+        transform: translateY(-1px);
+    }
+    
+    .action-btn-delete {
+        background: var(--danger);
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .action-btn-delete:hover {
+        background: #DC2626;
+        transform: translateY(-1px);
+    }
+    
+    .complete-form,
+    .delete-form {
+        display: inline;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    .pagination a,
+    .pagination span {
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.8rem;
+        transition: all 0.2s;
+    }
+    
+    .pagination a {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+    }
+    
+    .pagination a:hover {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: white;
+    }
+    
+    .pagination .current {
+        background: var(--primary);
+        color: white;
+    }
+    
+    @media (max-width: 768px) {
+        .filter-form {
+            flex-direction: column;
+        }
+        .filter-group {
+            width: 100%;
+        }
+        .referrals-table {
+            font-size: 0.7rem;
+        }
+        .referrals-table th,
+        .referrals-table td {
+            padding: 0.5rem;
+        }
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %} {% block content %}
+<div class="stats-card">
+    <span class="stats-number">{{ page_obj.paginator.count }}</span>
+    <span style="margin-left: 0.5rem; color: var(--text-secondary);">{{ title }}</span>
+</div>
+
+<div class="filter-bar">
+    <form method="get" class="filter-form">
+        <div class="filter-group">
+            <label>Search</label>
+            <input type="text" name="search" placeholder="Patient name or code..." value="{{ search }}">
+        </div>
+        {% if status_filter is not defined or not status_filter %}
+        <div class="filter-group">
+            <label>Status</label>
+            <select name="status">
+                <option value="">All</option>
+                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="accepted" {% if status_filter == 'accepted' %}selected{% endif %}>Accepted</option>
+                <option value="in_progress" {% if status_filter == 'in_progress' %}selected{% endif %}>In Progress</option>
+                <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Urgency</label>
+            <select name="urgency">
+                <option value="">All</option>
+                <option value="emergency" {% if urgency_filter == 'emergency' %}selected{% endif %}>Emergency</option>
+                <option value="urgent" {% if urgency_filter == 'urgent' %}selected{% endif %}>Urgent</option>
+                <option value="non_urgent" {% if urgency_filter == 'non_urgent' %}selected{% endif %}>Non-Urgent</option>
+            </select>
+        </div>
+        {% endif %}
+        <div class="filter-actions">
+            <button type="submit" class="btn-filter btn-filter-primary">Filter</button>
+            <a href="." class="btn-filter btn-filter-secondary">Reset</a>
+        </div>
+    </form>
+</div>
+
+<table class="referrals-table">
+    <thead>
+        <tr>
+            <th>Code</th>
+            <th>Patient</th>
+            <th>CHW</th>
+            <th>Urgency</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for referral in page_obj %}
+        <tr>
+            <td class="referral-code">{{ referral.referral_code }}</td>
+            <td>
+                <strong>{{ referral.patient.full_name }}</strong><br>
+                <small>{{ referral.patient.patient_id }}</small>
+            </td>
+            <td>{{ referral.chw.get_full_name|default:referral.chw.username }}</td>
+            <td>
+                <span style="background: 
+                    {% if referral.urgency == 'emergency' %}#FEE2E2; color:#DC2626
+                    {% elif referral.urgency == 'urgent' %}#FEF3C7; color:#D97706
+                    {% else %}#D1FAE5; color:#059669{% endif %}; 
+                    padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem;">
+                    {{ referral.get_urgency_display }}
+                </span>
+            </td>
+            <td>
+                <span style="background: 
+                    {% if referral.status == 'pending' %}#FEF3C7; color:#D97706
+                    {% elif referral.status == 'accepted' %}#DBEAFE; color:#2563EB
+                    {% elif referral.status == 'in_progress' %}#E0E7FF; color:#4338CA
+                    {% elif referral.status == 'completed' %}#D1FAE5; color:#059669
+                    {% else %}#FEE2E2; color:#DC2626{% endif %};
+                    padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem;">
+                    {{ referral.get_status_display }}
+                </span>
+            </td>
+            <td>{{ referral.created_at|date:"M d, Y" }}</td>
+            <td>
+                <div class="action-buttons">
+                    <!-- View Button - Goes to Doctor's View Referral Page -->
+                    <a href="{% url 'doctor:view_referral' referral.id %}" class="action-btn-view">
+                        <i class="fas fa-eye"></i> View
+                    </a>
+
+                    <!-- Complete Button (only for accepted/in_progress) -->
+                    {% if referral.status == 'accepted' or referral.status == 'in_progress' %}
+                    <form method="post" action="{% url 'referrals:update_referral_status' referral.id %}" class="complete-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="completed">
+                        <input type="hidden" name="notes" value="Treatment completed by doctor">
+                        <button type="submit" class="action-btn-complete" onclick="return confirm('Mark this referral as completed?')">
+                            <i class="fas fa-check-double"></i> Complete
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    <!-- Cancel Button (only for pending) -->
+                    {% if referral.status == 'pending' %}
+                    <form method="post" action="{% url 'referrals:update_referral_status' referral.id %}" class="delete-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="cancelled">
+                        <input type="hidden" name="notes" value="Referral cancelled by doctor">
+                        <button type="submit" class="action-btn-delete" onclick="return confirm('Cancel this referral?')">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" style="text-align: center; padding: 2rem;">
+                <i class="fas fa-exchange-alt" style="font-size: 2rem; color: var(--text-muted);"></i>
+                <p>No referrals found</p>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if page_obj.has_other_pages %}
+<div class="pagination">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if urgency_filter %}&urgency={{ urgency_filter }}{% endif %}">
+        <i class="fas fa-chevron-left"></i> Prev
+    </a>
+    {% endif %} {% for num in page_obj.paginator.page_range %} {% if page_obj.number == num %}
+    <span class="current">{{ num }}</span> {% elif num > page_obj.number|add:'-3' and num
+    < page_obj.number|add: '3' %} <a href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if urgency_filter %}&urgency={{ urgency_filter }}{% endif %}">
+        {{ num }}
+        </a>
+        {% endif %} {% endfor %} {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if urgency_filter %}&urgency={{ urgency_filter }}{% endif %}">
+            Next <i class="fas fa-chevron-right"></i>
+        </a> {% endif %}
+</div>
+{% endif %} {% endblock %}

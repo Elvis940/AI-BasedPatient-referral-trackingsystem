@@ -1,0 +1,513 @@
+{% extends 'doctor/dashboard/base.html' %} {% load static %} {% block title %}View Referral | J.J. Dossen{% endblock %} {% block page_title %}Referral Details: {{ referral.referral_code }}{% endblock %} {% block extra_css %}
+<style>
+    .detail-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        border: 1px solid var(--border);
+    }
+    
+    .detail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border);
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .status-pending {
+        background: #FEF3C7;
+        color: #D97706;
+    }
+    
+    .status-accepted {
+        background: #DBEAFE;
+        color: #2563EB;
+    }
+    
+    .status-in_progress {
+        background: #E0E7FF;
+        color: #4338CA;
+    }
+    
+    .status-completed {
+        background: #D1FAE5;
+        color: #059669;
+    }
+    
+    .status-cancelled {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .info-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+    }
+    
+    .info-value {
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .tracking-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .tracking-card {
+        background: var(--bg-main);
+        border-radius: 12px;
+        padding: 1rem;
+        text-align: center;
+    }
+    
+    .tracking-status {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+    
+    .tracking-status.checked-in {
+        color: var(--success);
+    }
+    
+    .tracking-status.checked-out {
+        color: var(--primary);
+    }
+    
+    .tracking-status.not-checked {
+        color: var(--danger);
+    }
+    
+    .tracking-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+    }
+    
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+    }
+    
+    .btn-success {
+        background: var(--success);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-success:hover {
+        background: #059669;
+        transform: translateY(-1px);
+    }
+    
+    .btn-danger {
+        background: var(--danger);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-danger:hover {
+        background: #DC2626;
+        transform: translateY(-1px);
+    }
+    
+    .btn-warning {
+        background: #F59E0B;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+    
+    .btn-warning:hover {
+        background: #D97706;
+        transform: translateY(-1px);
+    }
+    
+    .btn-info {
+        background: #3B82F6;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+    
+    .btn-info:hover {
+        background: #2563EB;
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background: var(--hover-bg);
+        color: var(--text-secondary);
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        text-decoration: none;
+        border: 1px solid var(--border);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .medication-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .medication-table th {
+        text-align: left;
+        padding: 0.5rem;
+        background: var(--bg-main);
+        font-size: 0.7rem;
+    }
+    
+    .medication-table td {
+        padding: 0.5rem;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.8rem;
+    }
+    
+    .alert-item {
+        padding: 0.75rem;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .alert-high {
+        background: #FEE2E2;
+        border-left: 3px solid var(--danger);
+    }
+    
+    .alert-medium {
+        background: #FEF3C7;
+        border-left: 3px solid var(--warning);
+    }
+    
+    .alert-low {
+        background: #DBEAFE;
+        border-left: 3px solid var(--info);
+    }
+    
+    .form-group {
+        margin-bottom: 0.75rem;
+    }
+    
+    .form-group label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal.active {
+        display: flex;
+    }
+    
+    .modal-content {
+        background: var(--bg-card);
+        border-radius: 16px;
+        max-width: 500px;
+        width: 90%;
+        padding: 1.5rem;
+    }
+    
+    .chw-info {
+        background: var(--bg-main);
+        padding: 0.75rem;
+        border-radius: 10px;
+        margin-top: 0.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .info-grid,
+        .tracking-grid {
+            grid-template-columns: 1fr;
+        }
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %} {% block content %}
+<!-- Patient Information -->
+<div class="detail-card">
+    <div class="detail-header">
+        <div><strong>Referral Code:</strong> {{ referral.referral_code }}</div>
+        <div><span class="status-badge status-{{ referral.status }}">{{ referral.get_status_display }}</span></div>
+    </div>
+    <div class="info-grid">
+        <div class="info-item"><span class="info-label">Patient Name</span><span class="info-value">{{ referral.patient.full_name }}</span></div>
+        <div class="info-item"><span class="info-label">Patient ID</span><span class="info-value">{{ referral.patient.patient_id }}</span></div>
+        <div class="info-item"><span class="info-label">Age / Gender</span><span class="info-value">{{ referral.patient.age }} / {{ referral.patient.get_gender_display }}</span></div>
+        <div class="info-item"><span class="info-label">Village</span><span class="info-value">{{ referral.patient.village }}</span></div>
+        <div class="info-item"><span class="info-label">Urgency</span><span class="info-value">{{ referral.get_urgency_display }}</span></div>
+        <div class="info-item"><span class="info-label">Specialist</span><span class="info-value">{{ referral.get_specialist_display }}</span></div>
+        <div class="info-item"><span class="info-label">CHW</span><span class="info-value">{{ referral.chw.get_full_name|default:referral.chw.username }}</span></div>
+        <div class="info-item"><span class="info-label">Created</span><span class="info-value">{{ referral.created_at|date:"M d, Y h:i A" }}</span></div>
+    </div>
+
+    <!-- CHW Contact Info -->
+    <div class="chw-info">
+        <small><i class="fas fa-user-circle"></i> <strong>CHW Contact:</strong> 
+        {% if referral.chw.email %}{{ referral.chw.email }}{% else %}No email on file{% endif %}
+        </small>
+    </div>
+</div>
+
+<!-- Patient Tracking Status -->
+<div class="detail-card">
+    <div class="detail-header"><strong><i class="fas fa-map-marker-alt"></i> Patient Tracking</strong></div>
+    <div class="tracking-grid">
+        <div class="tracking-card">
+            <div class="tracking-status {% if referral.check_in_time %}checked-in{% else %}not-checked{% endif %}">
+                {% if referral.check_in_time %}✅{% else %}⏳{% endif %}
+            </div>
+            <div class="tracking-status-value">{% if referral.check_in_time %}{{ referral.check_in_time|date:"M d, h:i A" }}{% else %}Not Checked In{% endif %}</div>
+            <div class="tracking-label">Check-in Time</div>
+        </div>
+        <div class="tracking-card">
+            <div class="tracking-status {% if referral.check_out_time %}checked-out{% else %}not-checked{% endif %}">
+                {% if referral.check_out_time %}✅{% else %}⏳{% endif %}
+            </div>
+            <div class="tracking-status-value">{% if referral.check_out_time %}{{ referral.check_out_time|date:"M d, h:i A" }}{% else %}Not Checked Out{% endif %}</div>
+            <div class="tracking-label">Check-out Time</div>
+        </div>
+        <div class="tracking-card">
+            <div class="tracking-status {% if referral.status == 'completed' %}checked-in{% else %}not-checked{% endif %}">
+                {% if referral.status == 'completed' %}🎉{% else %}🔄{% endif %}
+            </div>
+            <div class="tracking-status-value">{% if referral.status == 'completed' %}Completed{% else %}In Progress{% endif %}</div>
+            <div class="tracking-label">Treatment Status</div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="detail-card">
+    <div class="detail-header"><strong><i class="fas fa-tasks"></i> Actions</strong></div>
+    <div class="action-buttons">
+        {% if not referral.check_in_time and referral.status != 'completed' %}
+        <form method="post" action="{% url 'doctor:patient_check_in' referral.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-success"><i class="fas fa-sign-in-alt"></i> Check In Patient</button>
+        </form>
+        {% endif %} {% if referral.check_in_time and not referral.check_out_time and referral.status != 'completed' %}
+        <form method="post" action="{% url 'doctor:patient_check_out' referral.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-primary"><i class="fas fa-sign-out-alt"></i> Check Out Patient</button>
+        </form>
+        {% endif %}
+
+        <button onclick="openPrescriptionModal()" class="btn-primary"><i class="fas fa-prescription-bottle"></i> Prescribe Medication</button> {% if referral.status == 'in_progress' or referral.status == 'accepted' %}
+        <form method="post" action="{% url 'doctor:complete_treatment' referral.id %}" onsubmit="return confirm('Mark treatment as completed?')">
+            {% csrf_token %}
+            <button type="submit" class="btn-success"><i class="fas fa-check-double"></i> Complete Treatment</button>
+        </form>
+        {% endif %}
+
+        <!-- NEW: Communication Buttons -->
+        <a href="{% url 'doctor:report_missed_appointment' referral.id %}" class="btn-warning">
+            <i class="fas fa-calendar-times"></i> Report Missed Appointment
+        </a>
+
+        <a href="{% url 'doctor:send_patient_update_to_chw' referral.id %}" class="btn-info">
+            <i class="fas fa-comment-dots"></i> Send Update to CHW
+        </a>
+
+        <a href="{% url 'doctor:pending_referrals' %}" class="btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<!-- Medications Prescribed -->
+<div class="detail-card">
+    <div class="detail-header"><strong><i class="fas fa-pills"></i> Medications Prescribed</strong></div>
+    {% if referral.medications.all %}
+    <table class="medication-table">
+        <thead>
+            <tr>
+                <th>Medication</th>
+                <th>Dosage</th>
+                <th>Frequency</th>
+                <th>Duration</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for med in referral.medications.all %}
+            <tr>
+                <td>{{ med.medication_name }}</td>
+                <td>{{ med.dosage }}</td>
+                <td>{{ med.frequency }}</td>
+                <td>{{ med.duration_days }} days</td>
+                <td><span class="status-badge status-{{ med.status }}">{{ med.get_status_display }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted">No medications prescribed yet.</p>
+    {% endif %}
+</div>
+
+<!-- Alerts -->
+<div class="detail-card">
+    <div class="detail-header"><strong><i class="fas fa-bell"></i> Alerts</strong></div>
+    {% for alert in referral.alerts.all|slice:":5" %}
+    <div class="alert-item alert-{{ alert.severity }}">
+        <div>
+            <strong>{{ alert.get_alert_type_display }}</strong><br>
+            <small>{{ alert.message }}</small>
+        </div>
+        <div><small>{{ alert.created_at|timesince }} ago</small></div>
+    </div>
+    {% empty %}
+    <p class="text-muted">No alerts</p>
+    {% endfor %}
+</div>
+
+<!-- Prescription Modal -->
+<div id="prescriptionModal" class="modal">
+    <div class="modal-content">
+        <h3><i class="fas fa-prescription-bottle"></i> Prescribe Medication</h3>
+        <form method="post" action="{% url 'doctor:prescribe_medication' referral.id %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Medication Name *</label>
+                <input type="text" name="medication_name" required placeholder="e.g., Amoxicillin">
+            </div>
+            <div class="form-group">
+                <label>Dosage *</label>
+                <input type="text" name="dosage" required placeholder="e.g., 500mg">
+            </div>
+            <div class="form-group">
+                <label>Frequency *</label>
+                <input type="text" name="frequency" required placeholder="e.g., Twice daily, Every 8 hours">
+            </div>
+            <div class="form-group">
+                <label>Duration (days) *</label>
+                <input type="number" name="duration_days" value="7" required>
+            </div>
+            <div class="form-group">
+                <label>Instructions</label>
+                <textarea name="instructions" rows="2" placeholder="Take with food, etc."></textarea>
+            </div>
+            <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button type="button" onclick="closePrescriptionModal()" class="btn-secondary">Cancel</button>
+                <button type="submit" class="btn-primary">Prescribe</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openPrescriptionModal() {
+        document.getElementById('prescriptionModal').classList.add('active');
+    }
+
+    function closePrescriptionModal() {
+        document.getElementById('prescriptionModal').classList.remove('active');
+    }
+
+    document.getElementById('prescriptionModal').addEventListener('click', function(e) {
+        if (e.target === this) closePrescriptionModal();
+    });
+</script>
+{% endblock %}

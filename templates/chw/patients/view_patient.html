@@ -1,0 +1,339 @@
+{% extends 'chw/dashboard/base.html' %} {% load static %} {% block title %}Patient Details | J.J. Dossen{% endblock %} {% block page_title %}Patient Details{% endblock %} {% block extra_css %}
+<style>
+    .detail-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border);
+    }
+    
+    .detail-header {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border);
+        flex-wrap: wrap;
+    }
+    
+    .patient-avatar-large {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        border-radius: 25px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: white;
+    }
+    
+    .patient-info h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+    
+    .patient-info p {
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .badge-large {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .badge-male {
+        background: #DBEAFE;
+        color: #2563EB;
+    }
+    
+    .badge-female {
+        background: #FCE7F3;
+        color: #DB2777;
+    }
+    
+    .badge-other {
+        background: #E5E7EB;
+        color: #6B7280;
+    }
+    
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+        padding: 0.75rem;
+        background: var(--bg-main);
+        border-radius: 12px;
+    }
+    
+    .detail-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 0.25rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .detail-value {
+        font-size: 0.9rem;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+    
+    .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--primary);
+    }
+    
+    .health-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .health-item {
+        background: var(--bg-main);
+        padding: 0.75rem;
+        border-radius: 12px;
+        text-align: center;
+    }
+    
+    .health-value {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+    
+    .health-label {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 1rem;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        padding: 0.6rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 500;
+        font-size: 0.85rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+        border: none;
+    }
+    
+    .btn-secondary {
+        background: var(--hover-bg);
+        color: var(--text-secondary);
+        border: 1px solid var(--border);
+    }
+    
+    @media (max-width: 768px) {
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+        .detail-header {
+            flex-direction: column;
+            text-align: center;
+        }
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %} {% block content %}
+<div class="detail-card">
+    <div class="detail-header">
+        <div class="patient-avatar-large">
+            {{ patient.first_name|first|upper }}{{ patient.last_name|first|upper }}
+        </div>
+        <div class="patient-info">
+            <h2>{{ patient.full_name }}</h2>
+            <p><i class="fas fa-id-card"></i> Patient ID: {{ patient.patient_id }}</p>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <span class="badge-large {% if patient.gender == 'M' %}badge-male{% elif patient.gender == 'F' %}badge-female{% else %}badge-other{% endif %}">
+                    <i class="fas {% if patient.gender == 'M' %}fa-mars{% elif patient.gender == 'F' %}fa-venus{% else %}fa-genderless{% endif %}"></i>
+                    {{ patient.get_gender_display }}
+                </span>
+                <span class="badge-large">
+                    <i class="fas fa-birthday-cake"></i> {{ patient.age }} years
+                </span>
+                <span class="badge-large">
+                    <i class="fas fa-ring"></i> {{ patient.get_marital_status_display }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Health Statistics -->
+    <div class="health-grid">
+        {% if patient.bmi %}
+        <div class="health-item">
+            <div class="health-value">{{ patient.bmi }}</div>
+            <div class="health-label">BMI</div>
+        </div>
+        {% endif %} {% if patient.blood_pressure_display %}
+        <div class="health-item">
+            <div class="health-value">{{ patient.blood_pressure_display }}</div>
+            <div class="health-label">Blood Pressure</div>
+        </div>
+        {% endif %} {% if patient.temperature_c %}
+        <div class="health-item">
+            <div class="health-value">{{ patient.temperature_c }}°C</div>
+            <div class="health-label">Temperature</div>
+        </div>
+        {% endif %} {% if patient.pulse_rate %}
+        <div class="health-item">
+            <div class="health-value">{{ patient.pulse_rate }}</div>
+            <div class="health-label">Pulse Rate</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="detail-grid">
+        <!-- Personal Information -->
+        <div class="detail-item">
+            <span class="detail-label">Phone Number</span>
+            <span class="detail-value">{{ patient.phone_number }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Email</span>
+            <span class="detail-value">{{ patient.email|default:"Not provided" }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">National ID</span>
+            <span class="detail-value">{{ patient.national_id|default:"Not provided" }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Date of Birth</span>
+            <span class="detail-value">{{ patient.date_of_birth|date:"F d, Y" }}</span>
+        </div>
+
+        <!-- Address Information -->
+        <div class="detail-item">
+            <span class="detail-label">Village</span>
+            <span class="detail-value">{{ patient.village }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Cell</span>
+            <span class="detail-value">{{ patient.cell }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Sector</span>
+            <span class="detail-value">{{ patient.sector }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">District</span>
+            <span class="detail-value">{{ patient.district }}</span>
+        </div>
+        {% if patient.landmark %}
+        <div class="detail-item">
+            <span class="detail-label">Landmark</span>
+            <span class="detail-value">{{ patient.landmark }}</span>
+        </div>
+        {% endif %}
+
+        <!-- Emergency Contact -->
+        <div class="detail-item">
+            <span class="detail-label">Emergency Contact</span>
+            <span class="detail-value">{{ patient.emergency_name }} ({{ patient.emergency_relationship }})</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Emergency Phone</span>
+            <span class="detail-value">{{ patient.emergency_phone }}</span>
+        </div>
+
+        <!-- Medical History -->
+        <div class="detail-item">
+            <span class="detail-label">Known Conditions</span>
+            <span class="detail-value">{{ patient.known_conditions|default:"None reported" }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Current Medications</span>
+            <span class="detail-value">{{ patient.current_medications|default:"None" }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Allergies</span>
+            <span class="detail-value">{{ patient.allergies|default:"None known" }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Past Surgeries</span>
+            <span class="detail-value">{{ patient.past_surgeries|default:"None" }}</span>
+        </div>
+
+        <!-- Special Conditions -->
+        {% if patient.is_pregnant != 'na' %}
+        <div class="detail-item">
+            <span class="detail-label">Pregnancy Status</span>
+            <span class="detail-value">{% if patient.is_pregnant == 'yes' %}Yes - Pregnant{% else %}Not pregnant{% endif %}</span>
+        </div>
+        {% endif %}
+
+        <!-- System Information -->
+        <div class="detail-item">
+            <span class="detail-label">Registered By</span>
+            <span class="detail-value">{{ patient.registered_by.get_full_name|default:patient.registered_by.username }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Registration Date</span>
+            <span class="detail-value">{{ patient.registered_at|date:"F d, Y h:i A" }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Last Updated</span>
+            <span class="detail-value">{{ patient.updated_at|date:"F d, Y h:i A" }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="action-buttons" style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+    <a href="{% url 'patients:edit_patient' patient.id %}" class="btn-primary">
+        <i class="fas fa-edit"></i> Edit Patient
+    </a>
+    <a href="{% url 'ai_assessment:symptom_checker' patient.id %}" class="btn-primary" style="background: var(--info);">
+        <i class="fas fa-stethoscope"></i> AI Assessment
+    </a>
+    <a href="{% url 'ai_assessment:assessment_history' patient.id %}" class="btn-secondary">
+        <i class="fas fa-history"></i> Assessment History
+    </a>
+    <a href="{% url 'patients:all_patients' %}" class="btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Patients
+    </a>
+    <a href="{% url 'chw:patient_tracking' patient.id %}" class="btn-primary" style="background: var(--info);">
+        <i class="fas fa-chart-line"></i> Track Progress
+    </a>
+</div>
+{% endblock %}
